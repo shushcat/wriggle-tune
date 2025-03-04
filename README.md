@@ -33,3 +33,17 @@ Suppose I were to represent each point in time with a `u32`, and that I sampled 
 Then I would have 44,100 `u32`s a second with 4 bytes per `u32` and 1 kibibyte per 1024 bytes.
 Multiplying: `(44100 * 4) / 1024 => 172.265625`, so that would take about 172 kibibytes per second.
 Not terrible, but that's a kinda unwieldly representation for evolving accompaniments---is there a simpler way?
+
+Per the [midi tuning standard](https://midi.org/midi-tuning-updated-specification), midi frequencies are represended by 3 bytes, with the top of each byte reserved.
+The first byte represents one of the 128 possible midi notes.
+The next two represent one of `100/2^14` microtonal increments to the base pitch, which, although below the threshold of human hearing, the specification recommends keeping so as to make it easier to communicate with instruments that strictly follow the specification.
+That is, the situation is like this:
+
+	note----|offeset----------
+	0-------|0-------|0-------
+	.		 .		  .
+	.		 .		  .
+	.		 .		  .
+	............................ reserved
+
+That being the case, I am going to represent note midi frequencies with `(u8, u16)` tuples.
