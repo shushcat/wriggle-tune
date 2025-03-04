@@ -39,11 +39,11 @@ The first byte represents one of the 128 possible midi notes.
 The next two represent one of `100/2^14` microtonal increments to the base pitch, which, although below the threshold of human hearing, the specification recommends keeping so as to make it easier to communicate with instruments that strictly follow the specification.
 That is, the situation is like this:
 
-	note----|offeset----------
 	0-------|0-------|0-------
-	.		 .		  .
-	.		 .		  .
-	.		 .		  .
-	............................ reserved
+	^        ^        ^
+	|        |        |
+	|        |        still the offset
+	|        offset
+	note
 
 That being the case, I am going to represent note midi frequencies with `(u8, u16)` tuples.
