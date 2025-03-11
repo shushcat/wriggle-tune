@@ -15,7 +15,10 @@ This is a placeholder for a project that will evolve short bits of musical accom
 ## Roadmap & log
 
 - [ ] Given a sequence of notes (such as `A4E5D4C3F4`), generate a sequence of the same length that satisfies the harmonic fitness requirement.
-	- What should the actual representation be?  See 8-queens with genetic algorithms and midi signal bending programs.
+	- [x] Pick representation for this stage: vector of `(u8, u16)`s?
+	- [ ] Pick a fitness function
+	- [ ] Implement fitness function
+	- [ ] Make it work with a mocked sequence.
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
 - [ ] Output the generated sequence as midi.
 - [ ] Read an input sequence from midi.
@@ -47,3 +50,9 @@ That is, the situation is like this:
 	note
 
 That being the case, I am going to represent note midi frequencies with `(u8, u16)` tuples.
+
+## Fitness function
+
+[]harmonic&rhythmic offsets
+[]quantize(steps)
+~quantized: <>"smear" desired offset across pattern
