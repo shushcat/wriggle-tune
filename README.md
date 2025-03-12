@@ -16,8 +16,9 @@ This is a placeholder for a project that will evolve short bits of musical accom
 
 - [ ] Given a sequence of notes (such as `A4E5D4C3F4`), generate a sequence of the same length that satisfies the harmonic fitness requirement.
 	- [x] Pick representation for this stage: vector of `(u8, u16)`s?
-	- [ ] Pick a fitness function
+	- [x] Design fitness function
 	- [ ] Implement fitness function
+		- [ ] Mock up
 	- [ ] Make it work with a mocked sequence.
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
 - [ ] Output the generated sequence as midi.
@@ -80,3 +81,5 @@ So, for instance, if the number of steps was 4 (a third) and the chunk size was 
 		C#
 			C
 			E
+
+Experiment with initial `C#3F3G#3` sequence; test the fitness of compared sequences.

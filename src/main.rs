@@ -1,3 +1,5 @@
+#![allow(dead_code)]  // TODO Get rid of this nonsense.
+
 #[cfg(test)]
 mod tests;
 
@@ -22,7 +24,15 @@ impl Chromosome for NoteVec {
     }
 
     fn fitness(&self) -> usize {
-	todo!();
+	let target: NoteVec = vec![(49,0), (53,0), (56,0)];
+	let steps: u8 = 4; // Will need to pass these.
+	let chunks: u8 = 1;
+	self[0].0;
+	for i in 0..self.len() {
+	    // Sum the distances.
+	    // n.0 - target...
+	}
+	0
     }
 
     fn mutate(self) {
@@ -59,4 +69,6 @@ impl Population {
 
 fn main() {
     println!("Hello, primordial ooze!");
+    let test_seq: NoteVec = vec![(49,0), (53,0), (56,0)];
+    println!("{}", test_seq.fitness());
 }
