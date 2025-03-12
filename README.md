@@ -53,6 +53,30 @@ That being the case, I am going to represent note midi frequencies with `(u8, u1
 
 ## Fitness function
 
-[]harmonic&rhythmic offsets
-[]quantize(steps)
-~quantized: <>"smear" desired offset across pattern
+I'd like evolved patters to vary harmonically and rhythmically.
+
+I need to quantize the number of steps since if they weren't quantized, a four note pattern would have among its accompaniments a pattern with a single note that is offset from the source sequence by four steps and a pattern with four notes that are each offset by one step, and the two would be identically fit.
+
+Initially, I'll need to place a single note.
+
+Likely parameters:
+
+- number of steps
+- chunk size
+- resolution
+- counterpoint (logarithmic?)
+
+Leave aside resolution and counterpoint for now---just try to get a single note placed with the required number of steps.
+This will take a little bit of planning to make sure I don't paint myself into a corner here.
+
+Determine how many notes to place as the ratio of steps to chunk size.
+So, for instance, if the number of steps was 4 (a third) and the chunk size was 4, then only one note would be placed, and all of the following would be equally fit.
+
+	C#	F	G#	source sequence
+
+	F			target sequences...
+	A#
+		A
+		C#
+			C
+			E
