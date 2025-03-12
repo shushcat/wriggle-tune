@@ -17,19 +17,30 @@ This is a placeholder for a project that will evolve short bits of musical accom
 - [ ] Given a sequence of notes (such as `A4E5D4C3F4`), generate a sequence of the same length that satisfies the harmonic fitness requirement.
 	- [x] Pick representation for this stage: vector of `(u8, u16)`s?
 	- [x] Design fitness function
+		- [x] Formalize harmonic part
 	- [ ] Implement fitness function
 		- [ ] Mock up
 	- [ ] Make it work with a mocked sequence.
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
+- [ ] Formalize the contrapuntal part of the fitness function
 - [ ] Output the generated sequence as midi.
 - [ ] Read an input sequence from midi.
 - [ ] Detect a repeated phrase (allowing for some degree of imprecision) from midi input and treat that as a target sequence.
+- [ ] Tidy up
+	- [ ] Disallow dead code
 
 ## Resources
 
 - Look into https://en.wikipedia.org/wiki/Contrapuntal_motion; think about a fitness function for contrapuntal motion.
 - Evolving solutions to the 8-queens problem: file:~/Sync/cs541-artificial_intelligence/assignments/programming2/README.md
 - Bending midi signals to just intonation: file:~/Sync/cs510-music_sound_computation/intemperate_bend-course_project/README.md
+- Wiki pages:
+	- Scientific pitch notation: https://en.wikipedia.org/wiki/Scientific_pitch_notation
+	- https://en.wikipedia.org/wiki/MIDI
+	- https://en.wikipedia.org/wiki/MIDI_tuning_standard
+		- See section on converting between MIDI notes and frequencies.
+- Dominique Vandenneucker's MIDI tutorial: https://www.cs.cmu.edu/~music/cmsip/readings/MIDI%20tutorial%20for%20programmers.html
+- Joe Monzo; "A gentle introduction to the MIDI tuning specification"; 2001; http://tonalsoft.com/monzo/miditune/miditune.aspx.  Examples of MIDI pitch bend calculations.
 
 ## Sequence representation
 
