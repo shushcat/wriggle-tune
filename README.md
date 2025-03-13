@@ -19,7 +19,8 @@ This is a placeholder for a project that will evolve short bits of musical accom
 	- [x] Design fitness function
 		- [x] Formalize harmonic part
 	- [ ] Implement fitness function
-		- [ ] Mock up
+		- [x] Mock up
+		- [x] Make sure that a pattern's fitness increases as it gets closer to each target value, and that its fitness decreases at the same rate on either side of the target value.
 	- [ ] Make it work with a mocked sequence.
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
 - [ ] Formalize the contrapuntal part of the fitness function

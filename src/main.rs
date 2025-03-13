@@ -9,13 +9,13 @@ type NoteVec = Vec<Note>;
 trait Chromosome {
     fn breed(&self, other: Self) -> Self;
     fn display(&self);
-    fn fitness(&self) -> usize;
+    fn fitness(&self) -> isize;
     fn mutate(self);
 }
 
 impl Chromosome for NoteVec {
 
-    fn breed(&self, other: Self) -> Self {
+    fn breed(&self, _other: Self) -> Self {
 	todo!();
     }
 
@@ -23,20 +23,29 @@ impl Chromosome for NoteVec {
 	todo!();
     }
 
-    // Pass &params; get with Clap
-    fn fitness(&self) -> usize {
+    fn fitness(&self) -> isize {
+
+	// Passed &params; get with Clap
 	let target: NoteVec = vec![(49,0), (53,0), (56,0)];
-	let steps: u8 = 4; // Will need to pass these.
-	let chunks: u8 = 1;
-	let steps_score: u8
+	let p_steps: i8 = 4;
+	let p_notes: i8 = 3;
+
+	let mut steps: isize = 0;
+	let mut notes: isize = 0;
 	self[0].0;
 	for i in 0..self.len() {
-	    // Initially, assume same length
-	    let steps_score = ((target[i].0 - self[i].0) as i8).abs();
-	    // Sum the distances.
-	    // n.0 - target...
+	    steps = steps + (target[i].0 - self[i].0).abs() as isize;
+	    notes = notes + 1;
 	}
-	0
+
+	// These expressions make sure that the fitness of a pattern
+	// increases as it approaches the parameters, the decreases at
+	// the same rate it increased as it grows beyond the target
+	// values.  I know they are ugly, and I am sorry.
+	steps = ((p_steps as isize) - (((p_steps as isize) * (steps / (p_steps as isize)) - 1).abs() + (steps % (p_steps as isize)))).abs();
+	notes = ((p_notes as isize) - (((p_notes as isize) * (notes / (p_notes as isize)) - 1).abs() + (notes % (p_notes as isize)))).abs();
+
+	steps + notes
     }
 
     fn mutate(self) {
@@ -62,6 +71,11 @@ impl Population {
 
     /// Calculate the population's `fitness` parameter.
     fn calc_fitness(self) {
+	// Rather than calculating this, maybe have a `fitness_numer`
+	// and `fitness_denom` in the `Population` struct.  Then there
+	// could be `fitness()` function for `Population` that would
+	// just do the division when called.  The values would need to
+	// be updated each time a population member was polled.
 	todo!();
     }
 
@@ -73,6 +87,4 @@ impl Population {
 
 fn main() {
     println!("Hello, primordial ooze!");
-    let test_seq: NoteVec = vec![(49,0), (53,0), (56,0)];
-    println!("{}", test_seq.fitness());
 }
