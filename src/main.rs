@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-type Note = (u8, u16);
+type Note = (i8, i16);
 type NoteVec = Vec<Note>;
 
 trait Chromosome {
@@ -23,12 +23,16 @@ impl Chromosome for NoteVec {
 	todo!();
     }
 
+    // Pass &params; get with Clap
     fn fitness(&self) -> usize {
 	let target: NoteVec = vec![(49,0), (53,0), (56,0)];
 	let steps: u8 = 4; // Will need to pass these.
 	let chunks: u8 = 1;
+	let steps_score: u8
 	self[0].0;
 	for i in 0..self.len() {
+	    // Initially, assume same length
+	    let steps_score = ((target[i].0 - self[i].0) as i8).abs();
 	    // Sum the distances.
 	    // n.0 - target...
 	}
