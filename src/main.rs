@@ -4,6 +4,7 @@
 mod tests;
 
 use rand::{rngs::StdRng, Rng, SeedableRng};
+// use std::f32::log2;
 
 type Note = (i8, i16);
 type NoteVec = Vec<Note>;
@@ -21,7 +22,9 @@ impl Chromosome for NoteVec {
     }
 
     fn display(&self) {
-        todo!();
+	for i in 0..self.len() {
+	    print!("({}, {})", self[i].0, self[i].1);
+	}
     }
 
     // Parameters are passed by reference in case I need to re-use
@@ -30,11 +33,29 @@ impl Chromosome for NoteVec {
 
         let mut notes: isize = 0;
         let mut steps: isize = 0;
+
+	// let mut note_denom: isize = *p_notes as isize;
+	// let mut steps_denom: isize = *p_steps as isize;
+
         self[0].0;
         for i in 0..self.len() {
-            steps = steps + (target[i].0 - self[i].0).abs() as isize;
             notes = notes + 1;
+            steps = steps + (target[i].0 - self[i].0).abs() as isize;
         }
+
+	// if note_denom == 0 {
+	//     note_denom = notes;
+	// }
+	// if steps_denom == 0 {
+	//     steps_denom = steps;
+	// }
+
+	// Maybe worth smoothing out the gradient towards fitness by
+	// using a logarithm, but doing things this way would require
+	// lots of type-reshuffling, and handling of infinities when
+	// either parameter is 0.
+	// notes = -(((notes - *p_notes as f32).abs() * 10.0).log2());
+	// steps = -(((steps - *p_steps as f32).abs() * 10.0).log2());
 
         // These expressions make sure that the fitness of a pattern
         // increases as it approaches the parameters, then decreases at
@@ -48,18 +69,17 @@ impl Chromosome for NoteVec {
             - (((*p_steps as isize) * (steps / (*p_steps as isize) - 1).abs()
                 + (steps % (*p_steps as isize)))))
             .abs();
+	println!{"{}, {}", notes, steps};
 
         ((steps + notes) as f32) / ((p_steps + p_notes) as f32)
     }
 
+    /// Randomly change a Note in a NoteVec.
     fn mutate(mut self) {
 	let mut seed_rng = StdRng::from_os_rng();
 	let mutation_index: usize = (seed_rng.random::<i32>() % (self.len() as i32)) as usize;
 	let random_note: i8 = seed_rng.random::<i8>() % 127;
 	self[mutation_index].0 = random_note;
-
-
-        todo!();
     }
 }
 

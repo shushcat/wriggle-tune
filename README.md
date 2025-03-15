@@ -25,6 +25,7 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- [x] Parameterize and pass `p_steps` and `p_notes`
 	- [x] Parameterize the target sequence
 	- [x] Test the fitness function
+	- [ ] Test mutation
 
 - [ ] Get parameters with `clap`
 - [ ] Formalize the contrapuntal part of the fitness function
