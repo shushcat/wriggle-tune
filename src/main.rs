@@ -52,9 +52,11 @@ impl Chromosome for NoteVec {
         ((steps + notes) as f32) / ((p_steps + p_notes) as f32)
     }
 
-    fn mutate(self) {
-	let seed_rng = StdRng::from_os_rng();
-	let mutation_index = seed_rng.random();
+    fn mutate(mut self) {
+	let mut seed_rng = StdRng::from_os_rng();
+	let mutation_index: usize = (seed_rng.random::<i32>() % (self.len() as i32)) as usize;
+	let random_note: i8 = seed_rng.random::<i8>() % 127;
+	self[mutation_index].0 = random_note;
 
 
         todo!();
