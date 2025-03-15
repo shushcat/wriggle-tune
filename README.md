@@ -1,6 +1,6 @@
 # wriggle-tune
 
-This is a placeholder for a project that will evolve short bits of musical accompaniment.
+This is a small, work-in-progress program to evolve (questionably) musical accompaniments for short phrases.
 
 ## The algorithm, broadly
 
@@ -18,12 +18,17 @@ This is a placeholder for a project that will evolve short bits of musical accom
 	- [x] Pick representation for this stage: vector of `(u8, u16)`s?
 	- [x] Design fitness function
 		- [x] Formalize harmonic part
-	- [ ] Implement fitness function
-		- [x] Mock up
+	- [x] Mock up fitness function
+	- [x] Implement fitness function that handles harmonic fitness
 		- [x] Make sure that a pattern's fitness increases as it gets closer to each target value, and that its fitness decreases at the same rate on either side of the target value.
-	- [ ] Make it work with a mocked sequence.
-- [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
+	- [x] Make it work with a mocked sequence.
+	- [x] Parameterize and pass `p_steps` and `p_notes`
+	- [x] Parameterize the target sequence
+	- [x] Test the fitness function
+
+- [ ] Get parameters with `clap`
 - [ ] Formalize the contrapuntal part of the fitness function
+- [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
 - [ ] Output the generated sequence as midi.
 - [ ] Read an input sequence from midi.
 - [ ] Detect a repeated phrase (allowing for some degree of imprecision) from midi input and treat that as a target sequence.

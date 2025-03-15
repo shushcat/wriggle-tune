@@ -3,13 +3,15 @@
 #[cfg(test)]
 mod tests;
 
+use rand::{rngs::StdRng, Rng, SeedableRng};
+
 type Note = (i8, i16);
 type NoteVec = Vec<Note>;
 
 trait Chromosome {
     fn breed(&self, other: Self) -> Self;
     fn display(&self);
-    fn fitness(&self) -> isize;
+    fn fitness(&self, target: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32;
     fn mutate(self);
 }
 
@@ -22,14 +24,12 @@ impl Chromosome for NoteVec {
         todo!();
     }
 
-    fn fitness(&self) -> isize {
-        // Passed &params; get with Clap
-        let target: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
-        let p_steps: i8 = 4;
-        let p_notes: i8 = 3;
+    // Parameters are passed by reference in case I need to re-use
+    // them elsewhere.
+    fn fitness(&self, target: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32 {
 
-        let mut steps: isize = 0;
         let mut notes: isize = 0;
+        let mut steps: isize = 0;
         self[0].0;
         for i in 0..self.len() {
             steps = steps + (target[i].0 - self[i].0).abs() as isize;
@@ -40,19 +40,23 @@ impl Chromosome for NoteVec {
         // increases as it approaches the parameters, then decreases at
         // the same rate it increased at as it grows beyond the target
         // values.  I know they are ugly, and I am sorry.
-        steps = ((p_steps as isize)
-            - (((p_steps as isize) * (steps / (p_steps as isize)) - 1).abs()
-                + (steps % (p_steps as isize))))
+        notes = ((*p_notes as isize)
+            - (((*p_notes as isize) * (notes / (*p_notes as isize) - 1).abs()
+                + (notes % (*p_notes as isize)))))
             .abs();
-        notes = ((p_notes as isize)
-            - (((p_notes as isize) * (notes / (p_notes as isize)) - 1).abs()
-                + (notes % (p_notes as isize))))
+        steps = ((*p_steps as isize)
+            - (((*p_steps as isize) * (steps / (*p_steps as isize) - 1).abs()
+                + (steps % (*p_steps as isize)))))
             .abs();
 
-        steps + notes
+        ((steps + notes) as f32) / ((p_steps + p_notes) as f32)
     }
 
     fn mutate(self) {
+	let seed_rng = StdRng::from_os_rng();
+	let mutation_index = seed_rng.random();
+
+
         todo!();
     }
 }
