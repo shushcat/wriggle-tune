@@ -24,15 +24,17 @@ fn fitness_test() {
 #[test]
 fn mutate_test() {
     let mut test_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
-    let test_orig = test_seq.clone();
-    test_seq.mutate();
-    let mut same_notes = 0;
-    for i in 0..test_seq.len() {
-        if test_seq[i] == test_orig[i] {
-            same_notes = same_notes + 1;
-        }
+    let mut mutation_count: f32 = 0.0;
+    let runs = 1_000;
+    for _i in 0..runs {
+	if test_seq.mutate() {
+	    mutation_count = mutation_count + 1.0;
+	}
     }
-    assert_eq!(2, same_notes);
+    mutation_count = mutation_count / runs as f32;
+
+    assert!(0.40 < mutation_count);
+    assert!(0.60 > mutation_count);
 }
 
 #[test]

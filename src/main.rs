@@ -17,7 +17,7 @@ trait Chromosome {
         Self: Sized;
     fn display(&self);
     fn fitness(&self, target: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32;
-    fn mutate(&mut self);
+    fn mutate(&mut self) -> bool;
 }
 
 impl Chromosome for NoteVec {
@@ -108,15 +108,18 @@ impl Chromosome for NoteVec {
     /// Randomly change a Note in a NoteVec with 50% probability.  For
     /// now, this only affects notes proper---microtunings and
     /// contrapoint come later.
-    fn mutate(&mut self) {
+    fn mutate(&mut self) -> bool {
         let mut seed_rng = StdRng::from_os_rng();
         let flip: u8 = (seed_rng.random::<u8>()) % 255;
+	let mut mutated: bool = false;
 	if flip > 127 {
-	    seed_rng = StdRng::from_os_rng();
+	    // seed_rng = StdRng::from_os_rng();
 	    let mutation_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
-	    let random_note: i8 = seed_rng.random::<i8>() % 127;
+	    let random_note: i8 = (seed_rng.random::<i8>() % 127).abs();
 	    self[mutation_index].0 = random_note;
+	    mutated = true;
 	}
+	mutated
     }
 }
 
