@@ -29,49 +29,45 @@ impl Chromosome for NoteVec {
 
     // Parameters are passed by reference in case I need to re-use
     // them elsewhere.
-    fn fitness(&self, target: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32 {
+    fn fitness(&self, target: &NoteVec, notes_param: &i8, steps_param: &i8) -> f32 {
 
         let mut notes: isize = 0;
         let mut steps: isize = 0;
 
-	// let mut note_denom: isize = *p_notes as isize;
-	// let mut steps_denom: isize = *p_steps as isize;
-
+	// Get the total number of notes along with the sum of the
+	// number of steps by which each note in this sequence is
+	// offset from the note at the same index in the target
+	// sequence.
         self[0].0;
         for i in 0..self.len() {
             notes = notes + 1;
             steps = steps + (target[i].0 - self[i].0).abs() as isize;
         }
 
-	// if note_denom == 0 {
-	//     note_denom = notes;
-	// }
-	// if steps_denom == 0 {
-	//     steps_denom = steps;
-	// }
+	let mut notes_deviation: f32 = (notes as f32 - *notes_param as f32).abs() / 128.0;
+	let mut steps_deviation: f32 = (steps as f32 - *steps_param as f32).abs() / 128.0;
 
-	// Maybe worth smoothing out the gradient towards fitness by
-	// using a logarithm, but doing things this way would require
-	// lots of type-reshuffling, and handling of infinities when
-	// either parameter is 0.
-	// notes = -(((notes - *p_notes as f32).abs() * 10.0).log2());
-	// steps = -(((steps - *p_steps as f32).abs() * 10.0).log2());
+	// Clamp note and step deviations.
+	if notes_deviation < 0.0079 {
+	    notes_deviation = 0.0079;
+	} else if notes_deviation > 1.0 {
+	    notes_deviation = 1.0;
+	}
+	if steps_deviation < 0.0079 {
+	    steps_deviation = 0.0079;
+	} else if steps_deviation > 1.0 {
+	    steps_deviation = 1.0;
+	}
 
-        // These expressions make sure that the fitness of a pattern
-        // increases as it approaches the parameters, then decreases at
-        // the same rate it increased at as it grows beyond the target
-        // values.  I know they are ugly, and I am sorry.
-        notes = ((*p_notes as isize)
-            - (((*p_notes as isize) * (notes / (*p_notes as isize) - 1).abs()
-                + (notes % (*p_notes as isize)))))
-            .abs();
-        steps = ((*p_steps as isize)
-            - (((*p_steps as isize) * (steps / (*p_steps as isize) - 1).abs()
-                + (steps % (*p_steps as isize)))))
-            .abs();
-	println!{"{}, {}", notes, steps};
+	notes_deviation = -(notes_deviation.log2() * 0.1429);
+	steps_deviation = -(steps_deviation.log2() * 0.1429);
 
-        ((steps + notes) as f32) / ((p_steps + p_notes) as f32)
+	let result = (notes_deviation + steps_deviation) / 2.0;
+	if result > 0.99 {
+	    return 1.0;
+	} else {
+	    return result;
+	}
     }
 
     /// Randomly change a Note in a NoteVec.
