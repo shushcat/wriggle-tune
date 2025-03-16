@@ -27,9 +27,10 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- [x] Test the fitness function
 	- [x] Test mutation
 		- [x] Fix ownership; need mutable borrow, not steal
-	- [ ] Implement `breed()`
-		- [ ] Splice `self` and `other`
-		- [ ] Randomly mutate both `child1` and `child2` with some probability.
+	- [x] Implement `breed()`
+		- [x] Splice `self` and `other`
+		- [x] Randomly mutate both `child1` and `child2` with some probability.
+	- [ ] Test `breed()`
 
 - [ ] Get parameters with `clap`
 - [ ] Formalize the contrapuntal part of the fitness function

@@ -3,6 +3,7 @@
 #[cfg(test)]
 mod tests;
 
+// TODO Replace StdRng with `rand_chacha` for portability.
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 // This might be better as a struct.
@@ -35,15 +36,13 @@ impl Chromosome for NoteVec {
         child2.extend_from_slice(&other[crossover_index..]);
         child2.extend_from_slice(&self[..crossover_index]);
 
-
-
-	// Mutate!
+	child1.mutate();
+	child2.mutate();
 
         [child1, child2]
     }
 
-    // If I change `Note` to a struct, this should be removed and I
-    // should derive `Display`.
+    /// Display the contents of a `NoteVec`.j
     fn display(&self) {
         for i in 0..(self.len() - 1) {
             print!("({}, {}), ", self[i].0, self[i].1);
@@ -58,7 +57,7 @@ impl Chromosome for NoteVec {
     /// using an inverted logarithmic function to represent the decay
     /// in fitness as either the note number or the number of steps
     /// get farther away from the desired values.  Some clamping of
-    /// value around the edges, to avoid infinities near zero and out
+    /// values around the edges, to avoid infinities near zero and out
     /// of an abundance of caution on the other end, also seemed
     /// prudent.
     fn fitness(&self, target: &NoteVec, notes_param: &i8, steps_param: &i8) -> f32 {
@@ -106,9 +105,9 @@ impl Chromosome for NoteVec {
         }
     }
 
-    /// Randomly change a Note in a NoteVec.  For now, this only
-    /// affects notes proper---microtunings and contrapoint come
-    /// later.  This is called probabilistically from `breed()`.
+    /// Randomly change a Note in a NoteVec with 50% probability.  For
+    /// now, this only affects notes proper---microtunings and
+    /// contrapoint come later.
     fn mutate(&mut self) {
         let mut seed_rng = StdRng::from_os_rng();
         let flip: u8 = (seed_rng.random::<u8>()) % 255;
