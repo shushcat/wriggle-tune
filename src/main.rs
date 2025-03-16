@@ -20,15 +20,25 @@ trait Chromosome {
 }
 
 impl Chromosome for NoteVec {
+
     fn breed(&self, other: &Self) -> [Self; 2] {
         let mut seed_rng = StdRng::from_os_rng();
         let crossover_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
         let mut child1 = NoteVec::new();
         let mut child2 = NoteVec::new();
+	// The following can be compressed with `take()` and
+	// `collect()` (see the StackExchange discussion at
+	// https://stackoverflow.com/questions/40154150/how-do-i-concatenate-two-slices-in-rust),
+	// but I think the following is clearer in this case.
         child1.extend_from_slice(&self[..crossover_index]);
         child1.extend_from_slice(&other[crossover_index..]);
         child2.extend_from_slice(&other[crossover_index..]);
         child2.extend_from_slice(&self[..crossover_index]);
+
+
+
+	// Mutate!
+
         [child1, child2]
     }
 
@@ -101,9 +111,13 @@ impl Chromosome for NoteVec {
     /// later.  This is called probabilistically from `breed()`.
     fn mutate(&mut self) {
         let mut seed_rng = StdRng::from_os_rng();
-        let mutation_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
-        let random_note: i8 = seed_rng.random::<i8>() % 127;
-        self[mutation_index].0 = random_note;
+        let flip: u8 = (seed_rng.random::<u8>()) % 255;
+	if flip > 127 {
+	    seed_rng = StdRng::from_os_rng();
+	    let mutation_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
+	    let random_note: i8 = seed_rng.random::<i8>() % 127;
+	    self[mutation_index].0 = random_note;
+	}
     }
 }
 
