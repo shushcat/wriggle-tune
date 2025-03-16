@@ -27,8 +27,16 @@ impl Chromosome for NoteVec {
 	}
     }
 
-    // Parameters are passed by reference in case I need to re-use
-    // them elsewhere.
+    /// The fitness of a given `NoteVec` is calculated by counting the
+    /// number of notes it contains, summing the stepwise distances
+    /// between each note and an associated note in the target
+    /// sequence, converting both values to percentages of 2^7, then
+    /// using an inverted logarithmic function to represent the decay
+    /// in fitness as either the note number or the number of steps
+    /// get farther away from the desired values.  Some clamping of
+    /// value around the edges, to avoid infinities near zero and out
+    /// of an abundance of caution on the other end, also seemed
+    /// prudent.
     fn fitness(&self, target: &NoteVec, notes_param: &i8, steps_param: &i8) -> f32 {
 
         let mut notes: isize = 0;
@@ -38,7 +46,6 @@ impl Chromosome for NoteVec {
 	// number of steps by which each note in this sequence is
 	// offset from the note at the same index in the target
 	// sequence.
-        self[0].0;
         for i in 0..self.len() {
             notes = notes + 1;
             steps = steps + (target[i].0 - self[i].0).abs() as isize;
@@ -59,6 +66,12 @@ impl Chromosome for NoteVec {
 	    steps_deviation = 1.0;
 	}
 
+	// The `0.1429` in the following expressions is just an
+	// approximation of 1/7th, which makes the curve described by
+	// `x.log2()` in the 1 by 1 square immediately above the origin
+	// look flatter toward the right and steeper toward the left,
+	// both in precisely the way I think this particular reward
+	// function should be.
 	notes_deviation = -(notes_deviation.log2() * 0.1429);
 	steps_deviation = -(steps_deviation.log2() * 0.1429);
 
