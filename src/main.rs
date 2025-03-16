@@ -4,27 +4,41 @@
 mod tests;
 
 use rand::{rngs::StdRng, Rng, SeedableRng};
-// use std::f32::log2;
 
+// This might be better as a struct.
 type Note = (i8, i16);
+
 type NoteVec = Vec<Note>;
 
 trait Chromosome {
-    fn breed(&self, other: Self) -> Self;
+    fn breed(&self, other: &Self) -> [Self; 2]
+    where
+        Self: Sized;
     fn display(&self);
     fn fitness(&self, target: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32;
-    fn mutate(self);
+    fn mutate(&mut self);
 }
 
 impl Chromosome for NoteVec {
-    fn breed(&self, _other: Self) -> Self {
-        todo!();
+    fn breed(&self, other: &Self) -> [Self; 2] {
+        let mut seed_rng = StdRng::from_os_rng();
+        let crossover_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
+        let mut child1 = NoteVec::new();
+        let mut child2 = NoteVec::new();
+        child1.extend_from_slice(&self[..crossover_index]);
+        child1.extend_from_slice(&other[crossover_index..]);
+        child2.extend_from_slice(&other[crossover_index..]);
+        child2.extend_from_slice(&self[..crossover_index]);
+        [child1, child2]
     }
 
+    // If I change `Note` to a struct, this should be removed and I
+    // should derive `Display`.
     fn display(&self) {
-	for i in 0..self.len() {
-	    print!("({}, {})", self[i].0, self[i].1);
-	}
+        for i in 0..(self.len() - 1) {
+            print!("({}, {}), ", self[i].0, self[i].1);
+        }
+        println!("({}, {})", self.last().unwrap().0, self.last().unwrap().1);
     }
 
     /// The fitness of a given `NoteVec` is calculated by counting the
@@ -38,57 +52,58 @@ impl Chromosome for NoteVec {
     /// of an abundance of caution on the other end, also seemed
     /// prudent.
     fn fitness(&self, target: &NoteVec, notes_param: &i8, steps_param: &i8) -> f32 {
-
         let mut notes: isize = 0;
         let mut steps: isize = 0;
 
-	// Get the total number of notes along with the sum of the
-	// number of steps by which each note in this sequence is
-	// offset from the note at the same index in the target
-	// sequence.
+        // Get the total number of notes along with the sum of the
+        // number of steps by which each note in this sequence is
+        // offset from the note at the same index in the target
+        // sequence.
         for i in 0..self.len() {
             notes = notes + 1;
             steps = steps + (target[i].0 - self[i].0).abs() as isize;
         }
 
-	let mut notes_deviation: f32 = (notes as f32 - *notes_param as f32).abs() / 128.0;
-	let mut steps_deviation: f32 = (steps as f32 - *steps_param as f32).abs() / 128.0;
+        let mut notes_deviation: f32 = (notes as f32 - *notes_param as f32).abs() / 128.0;
+        let mut steps_deviation: f32 = (steps as f32 - *steps_param as f32).abs() / 128.0;
 
-	// Clamp note and step deviations.
-	if notes_deviation < 0.0079 {
-	    notes_deviation = 0.0079;
-	} else if notes_deviation > 1.0 {
-	    notes_deviation = 1.0;
-	}
-	if steps_deviation < 0.0079 {
-	    steps_deviation = 0.0079;
-	} else if steps_deviation > 1.0 {
-	    steps_deviation = 1.0;
-	}
+        // Clamp note and step deviations.
+        if notes_deviation < 0.0079 {
+            notes_deviation = 0.0079;
+        } else if notes_deviation > 1.0 {
+            notes_deviation = 1.0;
+        }
+        if steps_deviation < 0.0079 {
+            steps_deviation = 0.0079;
+        } else if steps_deviation > 1.0 {
+            steps_deviation = 1.0;
+        }
 
-	// The `0.1429` in the following expressions is just an
-	// approximation of 1/7th, which makes the curve described by
-	// `x.log2()` in the 1 by 1 square immediately above the origin
-	// look flatter toward the right and steeper toward the left,
-	// both in precisely the way I think this particular reward
-	// function should be.
-	notes_deviation = -(notes_deviation.log2() * 0.1429);
-	steps_deviation = -(steps_deviation.log2() * 0.1429);
+        // The `0.1429` in the following expressions is just an
+        // approximation of 1/7th, which makes the curve described by
+        // `x.log2()` in the 1 by 1 square immediately above the origin
+        // look flatter toward the right and steeper toward the left,
+        // both in precisely the way I think this particular reward
+        // function should be.
+        notes_deviation = -(notes_deviation.log2() * 0.1429);
+        steps_deviation = -(steps_deviation.log2() * 0.1429);
 
-	let result = (notes_deviation + steps_deviation) / 2.0;
-	if result > 0.99 {
-	    return 1.0;
-	} else {
-	    return result;
-	}
+        let result = (notes_deviation + steps_deviation) / 2.0;
+        if result > 0.99 {
+            return 1.0;
+        } else {
+            return result;
+        }
     }
 
-    /// Randomly change a Note in a NoteVec.
-    fn mutate(mut self) {
-	let mut seed_rng = StdRng::from_os_rng();
-	let mutation_index: usize = (seed_rng.random::<i32>() % (self.len() as i32)) as usize;
-	let random_note: i8 = seed_rng.random::<i8>() % 127;
-	self[mutation_index].0 = random_note;
+    /// Randomly change a Note in a NoteVec.  For now, this only
+    /// affects notes proper---microtunings and contrapoint come
+    /// later.  This is called probabilistically from `breed()`.
+    fn mutate(&mut self) {
+        let mut seed_rng = StdRng::from_os_rng();
+        let mutation_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
+        let random_note: i8 = seed_rng.random::<i8>() % 127;
+        self[mutation_index].0 = random_note;
     }
 }
 
@@ -122,5 +137,7 @@ impl Population {
 }
 
 fn main() {
+    let test_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
+    test_seq.display();
     println!("Hello, primordial ooze!");
 }

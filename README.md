@@ -25,7 +25,9 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- [x] Parameterize and pass `p_steps` and `p_notes`
 	- [x] Parameterize the target sequence
 	- [x] Test the fitness function
-	- [ ] Test mutation
+	- [x] Test mutation
+		- [x] Fix ownership; need mutable borrow, not steal
+	- [ ] Implement `breed()`
 
 - [ ] Get parameters with `clap`
 - [ ] Formalize the contrapuntal part of the fitness function
@@ -35,6 +37,14 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 - [ ] Detect a repeated phrase (allowing for some degree of imprecision) from midi input and treat that as a target sequence.
 - [ ] Tidy up
 	- [ ] Disallow dead code
+
+-----
+
+Maybe later:
+
+
+- [ ] Convert `Note` to a struct
+- [ ] Implement `Display` trait for `NoteVec`; see `game_of_life` class notes
 
 ## Resources
 
