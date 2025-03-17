@@ -58,3 +58,18 @@ fn breed_test() {
     assert!((s1_3count - s2_4count).abs() >= 0);
     assert!((s1_3count - s2_4count).abs() <= 1);
 }
+
+#[test]
+fn test_generate_spontaneously() {
+    let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
+    let mut pop = Population::new();
+    pop.generate_spontaneously(&target_seq, &3, &5);
+    pop.oldsters[0].display();
+    pop.oldsters[1].display();
+    assert!(pop.oldsters[0].len() == 3);
+    assert!(pop.oldsters[999].len() == 3);
+    for i 0..1000 {
+	println!("{}", pop.oldsters[i]);
+    }
+    assert!(0==1);
+}

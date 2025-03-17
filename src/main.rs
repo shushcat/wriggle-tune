@@ -3,6 +3,8 @@
 #[cfg(test)]
 mod tests;
 
+use std::fmt;
+
 // TODO Replace StdRng with `rand_chacha` for portability.
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
@@ -10,6 +12,20 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 type Note = (i8, i16);
 
 type NoteVec = Vec<Note>;
+
+impl Display for NoteVec {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        // let display_chars = ['·', '●'];
+        for n in self {
+            let n_string: Vec<String> = self
+                .iter()
+                .map(|&(a, b)| format!("({}, {})", a, b))
+                .collect();
+            writeln!(f, "{}", n_string)?;
+        }
+        Ok(())
+    }
+}
 
 trait Chromosome {
     fn breed(&self, other: &Self) -> [Self; 2]
@@ -144,24 +160,40 @@ impl Chromosome for NoteVec {
 }
 
 struct Population {
-    note_vec1: [NoteVec; 10_000],
-    note_vec2: [NoteVec; 10_000],
-    size: usize,
-    member_fitnesses: f32,
+    oldsters: [NoteVec; 1_000],
+    younguns: [NoteVec; 1_000],
+    size: usize,  // Unnecessary if vector lengths hardcoded.
+    member_fitnesses: f32,  // A sum; normalized in `fitness()`.
 }
 
 impl Population {
 
+    fn new() -> Self {
+	// This would be less of a pain to initialize if I implemented
+	// the `Copy` trait on `NoteVec`, but I think doing that would
+	// make evolving the next generation more expensive since
+	// ownership of each value in `younguns` wouldn't simply be
+	// transferred to `oldsters`.
+	let oldsters = [0; 1_000].map( |_| NoteVec::new());
+	let younguns = [0; 1_000].map( |_| NoteVec::new());
+	Population {
+	    oldsters,
+	    younguns,
+	    size: 0,
+	    member_fitnesses: 0.0,
+	}
+    }
+
     /// Generate a new population of `NoteVec`s, with the length of
-    /// each `NoteVec` determined by the target sequence.
+    /// each `NoteVec` determined by the target sequence.  This
+    /// function should only be called to jumpstart the whole process;
+    /// to evolve an existing population, call `evolve()`.
     fn generate_spontaneously(&mut self, target: &NoteVec, p_notes: &i8, p_steps: &i8) {
-	self.member_fitnesses = 0.0;
-	for i in 0..self.note_vec1.len(){
-	    let mut n = NoteVec::new();
+	for i in 0..self.oldsters.len(){
 	    // Populate the `NoteVec` with nice new notes.
-	    n.randomize(target.len());
-	    self.member_fitnesses = self.member_fitnesses + self.note_vec1[i].fitness(target, p_notes, p_steps);
-	    self.note_vec1[i] = n;
+	    self.oldsters[i].randomize(target.len());
+	    self.size = self.size + 1;
+	    self.member_fitnesses = self.member_fitnesses + self.oldsters[i].fitness(target, p_notes, p_steps);
 	}
     }
 

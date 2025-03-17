@@ -30,8 +30,11 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- [x] Implement `breed()`
 		- [x] Splice `self` and `other`
 		- [x] Randomly mutate both `child1` and `child2` with some probability.
-	- [x] Test `breed()`: make sure mutation happens about half the time
+	- [x] Test `mutate()`: make sure mutation happens about half the time
+	- [x] Test `breed()`: ensure there returned children don't differ by more than they should given mutation and crossover
 	- [ ] Generate population of sequences
+		- [x] Initialize population values to random sequences
+		- [ ] Test to make sure it gets setup
 
 - [ ] Get parameters with `clap`
 - [ ] Formalize the contrapuntal part of the fitness function
