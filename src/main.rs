@@ -34,8 +34,8 @@ impl Chromosome for NoteVec {
 	// but I think the following is clearer in this case.
         child1.extend_from_slice(&self[..crossover_index]);
         child1.extend_from_slice(&other[crossover_index..]);
-        child2.extend_from_slice(&other[crossover_index..]);
-        child2.extend_from_slice(&self[..crossover_index]);
+        child2.extend_from_slice(&other[..crossover_index]);
+        child2.extend_from_slice(&self[crossover_index..]);
 
 	child1.mutate();
 	child2.mutate();
