@@ -41,12 +41,20 @@ fn mutate_test() {
 fn breed_test() {
     let mut seq1 = NoteVec::new();
     let mut seq2 = NoteVec::new();
+    let seq3: NoteVec;
+    let seq4: NoteVec;
     seq1.randomize(6);
     seq2.randomize(6);
     seq1.display();
     seq2.display();
-    [seq1, seq2] = seq1.breed(&seq2);
-    seq1.display();
-    seq2.display();
-    assert_eq!(1, 2);
+    [seq3, seq4] = seq1.breed(&seq2);
+    seq3.display();
+    seq4.display();
+    // Used an LLM to find the `any()` method instead of combing
+    // through everything available on iterators.
+    let s1_3count: i8 = seq1.iter().filter( |&x| seq3.iter().any( |y| x == y)).count() as i8;
+    let s2_4count: i8 = seq2.iter().filter( |&x| seq4.iter().any( |y| x == y)).count() as i8;
+    println!("{}, {}", s1_3count, s2_4count);
+    assert!((s1_3count - s2_4count).abs() >= 0);
+    assert!((s1_3count - s2_4count).abs() <= 1);
 }
