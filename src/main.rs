@@ -18,6 +18,7 @@ trait Chromosome {
     fn display(&self);
     fn fitness(&self, target: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32;
     fn mutate(&mut self) -> bool;
+    fn randomize(&mut self, length: usize);
 }
 
 impl Chromosome for NoteVec {
@@ -128,16 +129,40 @@ impl Chromosome for NoteVec {
 	}
 	mutated
     }
+
+    fn randomize(&mut self, length: usize) {
+	self.clear();
+	let mut seed_rng = StdRng::from_os_rng();
+	// Populate the `NoteVec` with nice new notes.
+	for _ in 0..length {
+	    let random_note: Note = ((seed_rng.random::<i8>() % 127).abs(), 0);
+	    self.push(random_note);
+	}
+
+    }
+
 }
 
 struct Population {
-    note_vecs: Vec<NoteVec>,
-    fitness: usize,
+    note_vec1: [NoteVec; 10_000],
+    note_vec2: [NoteVec; 10_000],
+    size: usize,
+    member_fitnesses: f32,
 }
 
 impl Population {
-    fn generate_spontaneously(self) {
-        todo!();
+
+    /// Generate a new population of `NoteVec`s, with the length of
+    /// each `NoteVec` determined by the target sequence.
+    fn generate_spontaneously(&mut self, target: &NoteVec, p_notes: &i8, p_steps: &i8) {
+	self.member_fitnesses = 0.0;
+	for i in 0..self.note_vec1.len(){
+	    let mut n = NoteVec::new();
+	    // Populate the `NoteVec` with nice new notes.
+	    n.randomize(target.len());
+	    self.member_fitnesses = self.member_fitnesses + self.note_vec1[i].fitness(target, p_notes, p_steps);
+	    self.note_vec1[i] = n;
+	}
     }
 
     fn lottery_selection(&self) -> NoteVec {

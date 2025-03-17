@@ -39,4 +39,14 @@ fn mutate_test() {
 
 #[test]
 fn breed_test() {
+    let mut seq1 = NoteVec::new();
+    let mut seq2 = NoteVec::new();
+    seq1.randomize(6);
+    seq2.randomize(6);
+    seq1.display();
+    seq2.display();
+    [seq1, seq2] = seq1.breed(&seq2);
+    seq1.display();
+    seq2.display();
+    assert_eq!(1, 2);
 }
