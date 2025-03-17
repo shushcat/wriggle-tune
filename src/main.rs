@@ -42,7 +42,7 @@ impl Chromosome for NoteVec {
         [child1, child2]
     }
 
-    /// Display the contents of a `NoteVec`.j
+    /// Display the contents of a `NoteVec`.
     fn display(&self) {
         for i in 0..(self.len() - 1) {
             print!("({}, {}), ", self[i].0, self[i].1);
@@ -98,16 +98,23 @@ impl Chromosome for NoteVec {
         steps_deviation = -(steps_deviation.log2() * 0.1429);
 
         let result = (notes_deviation + steps_deviation) / 2.0;
+
+	// Clamp the result.
         if result > 0.99 {
             return 1.0;
         } else {
             return result;
         }
+
     }
 
     /// Randomly change a Note in a NoteVec with 50% probability.  For
     /// now, this only affects notes proper---microtunings and
-    /// contrapoint come later.
+    /// counterpoint come later.  Returns `true` when mutation
+    /// happens, `false` when it doesn't, which I think is an okay
+    /// usage here (as opposed to returning a `Result`) since the
+    /// caller is modified.  Nonetheless, this isn't as idiomatic as
+    /// it could be.
     fn mutate(&mut self) -> bool {
         let mut seed_rng = StdRng::from_os_rng();
         let flip: u8 = (seed_rng.random::<u8>()) % 255;
@@ -143,7 +150,8 @@ impl Population {
         // and `fitness_denom` in the `Population` struct.  Then there
         // could be `fitness()` function for `Population` that would
         // just do the division when called.  The values would need to
-        // be updated each time a population member was polled.
+        // be updated each time a population member was polled during
+        // lottery selection.
         todo!();
     }
 

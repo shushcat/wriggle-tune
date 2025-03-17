@@ -55,6 +55,10 @@ Maybe later:
 - Look into https://en.wikipedia.org/wiki/Contrapuntal_motion; think about a fitness function for contrapuntal motion.
 - Evolving solutions to the 8-queens problem: file:~/Sync/cs541-artificial_intelligence/assignments/programming2/README.md
 - Bending midi signals to just intonation: file:~/Sync/cs510-music_sound_computation/intemperate_bend-course_project/README.md
+- Useful crates
+	- https://crates.io/crates/jack, real-time audio and midi with Jack
+	- https://crates.io/crates/midir, real-time midi-processing library
+	- https://crates.io/crates/midly, fast processing of midi files and signals
 - Wiki pages:
 	- Scientific pitch notation: https://en.wikipedia.org/wiki/Scientific_pitch_notation
 	- https://en.wikipedia.org/wiki/MIDI
@@ -65,14 +69,15 @@ Maybe later:
 
 ## Sequence representation
 
-Suppose I were to represent each point in time with a `u32`, and that I sampled at a rate of 44.1kHz.
-Then I would have 44,100 `u32`s a second with 4 bytes per `u32` and 1 kibibyte per 1024 bytes.
-Multiplying: `(44100 * 4) / 1024 => 172.265625`, so that would take about 172 kibibytes per second.
-Not terrible, but that's a kinda unwieldly representation for evolving accompaniments---is there a simpler way?
+~~Suppose I were to represent each point in time with a `u32`, and that I sampled at a rate of 44.1kHz.~~
+~~Then I would have 44,100 `u32`s a second with 4 bytes per `u32` and 1 kibibyte per 1024 bytes.~~
+~~Multiplying: `(44100 * 4) / 1024 => 172.265625`, so that would take about 172 kibibytes per second.~~
+~~Not terrible, but that's a kinda unwieldly representation for evolving accompaniments---is there a simpler way?~~
+[No, that's nonsense and I should sleep more---I need to focus on midi, not sample rates.]
 
 Per the [midi tuning standard](https://midi.org/midi-tuning-updated-specification), midi frequencies are represended by 3 bytes, with the top of each byte reserved.
 The first byte represents one of the 128 possible midi notes.
-The next two represent one of `100/2^14` microtonal increments to the base pitch, which, although below the threshold of human hearing, the specification recommends keeping so as to make it easier to communicate with instruments that strictly follow the specification.
+The next two represent one of `100/2^14` microtonal increments to the base pitch, increments which, although below the threshold of human hearing, the specification recommends keeping so as to make it easier to communicate with instruments that strictly follow the specification.
 That is, the situation is like this:
 
 	0-------|0-------|0-------
@@ -82,11 +87,13 @@ That is, the situation is like this:
 	|        offset
 	note
 
-That being the case, I am going to represent note midi frequencies with `(u8, u16)` tuples.
+That being the case, I am going to represent note midi frequencies with ~~`(u8, u16)` tuples~~.
+Actually, I should be using `(i8, i16)` tuples since that way I need to handle any changes in sign as they occur when dealing with the note.
+It's still somewhat unclear what will need to happen when dealing with microtonal adjustments; it might be a good idea to split the `i16` into `i8`s, but there will be some bit-level mussing around in either case.
 
 ## Fitness function
 
-I'd like evolved patters to vary harmonically and rhythmically.
+I'd like evolved patterns to vary harmonically and rhythmically.
 
 I need to quantize the number of steps since if they weren't quantized, a four note pattern would have among its accompaniments a pattern with a single note that is offset from the source sequence by four steps and a pattern with four notes that are each offset by one step, and the two would be identically fit.
 
