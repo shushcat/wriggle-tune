@@ -193,6 +193,7 @@ impl Population {
     // the returned `NoteVec`?  The returned `NoteVec` probably needs
     // to be a reference.  The falloff in fitness may not currently be
     // steep enough for this to work.
+    // fn lottery_selection(&self) -> Option<&NoteVec> {
     fn lottery_selection(&self) -> Option<&NoteVec> {
         // Need to parameterize everything.  Where should the
         // parameters be stored?
@@ -239,25 +240,30 @@ impl Population {
 
     // Create a new population, then become that population, just like
     // in real life.
-    fn evolve(self) -> GenericResult<bool> {
+    fn evolve(&mut self) -> GenericResult<bool> {
         let p_notes: i8 = 4; // TODO parameterize
         let p_steps: i8 = 3; // TODO parameterize
 	let mut child1: NoteVec;
 	let mut child2: NoteVec;
 	for i in 0..self.younguns.len() {
-            let parent1 = self.lottery_selection()?;
-            let parent2 = self.lottery_selection()?;
+	    // See
+	    // https://stackoverflow.com/questions/28572101/what-is-a-clean-way-to-convert-a-result-into-an-option#28572170
+	    // for info on converting `Option`s to `Result`s with
+	    // `ok()` and pals.
+            let parent1 = self.lottery_selection().ok_or("Lottery malfunction")?;
+            let parent2 = self.lottery_selection().ok_or("Lottery malfunction")?;
             [child1, child2] = parent1.breed(parent2);
+	    // Pick the fitter of the two children at each step.  I am
+	    // told there is precedent for this.
 	    if child1.fitness(&self.target_seq, &p_notes, &p_steps) > child2.fitness(&self.target_seq, &p_notes, &p_steps) {
 		self.younguns[i] = child1;
 	    } else {
 		self.younguns[i] = child2;
 	    }
-
 	}
 	// make sure younguns and oldsters are the same length
         self.oldsters = self.younguns;
-	true
+	Ok(true)
     }
 
 }
