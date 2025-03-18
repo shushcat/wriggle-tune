@@ -245,6 +245,8 @@ impl Population {
         let p_steps: i8 = 3; // TODO parameterize
 	let mut child1: NoteVec;
 	let mut child2: NoteVec;
+	let youngeruns = [0; 1_000].map(|_| NoteVec::new());
+
 	for i in 0..self.younguns.len() {
 	    // See
 	    // https://stackoverflow.com/questions/28572101/what-is-a-clean-way-to-convert-a-result-into-an-option#28572170
@@ -261,8 +263,12 @@ impl Population {
 		self.younguns[i] = child2;
 	    }
 	}
-	// make sure younguns and oldsters are the same length
-        self.oldsters = self.younguns;
+	// TODO make sure younguns and oldsters are the same length
+	// See https://doc.rust-lang.org/std/mem/fn.replace.html.  The
+	// `std::mem::swap()` function would also do the trick, but
+	// using it would take another line.  `take()` would work if
+	// I'd implemented the `Default` trait.
+	self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
 	Ok(true)
     }
 
