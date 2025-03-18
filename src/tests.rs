@@ -22,9 +22,9 @@ fn chromosome_mutate() {
     let mut mutation_count: f32 = 0.0;
     let runs = 1_000;
     for _i in 0..runs {
-	if test_seq.mutate() {
-	    mutation_count = mutation_count + 1.0;
-	}
+        if test_seq.mutate() {
+            mutation_count = mutation_count + 1.0;
+        }
     }
     mutation_count = mutation_count / runs as f32;
 
@@ -49,8 +49,8 @@ fn chromosome_breed() {
     // through everything available on iterators.  This check could be
     // done much more quickly by just indexing the vectors, but I'm
     // keeping it for reference since this is just a test.
-    let s1_3count: i8 = seq1.iter().filter( |&x| seq3.iter().any( |y| x == y)).count() as i8;
-    let s2_4count: i8 = seq2.iter().filter( |&x| seq4.iter().any( |y| x == y)).count() as i8;
+    let s1_3count: i8 = seq1.iter().filter(|&x| seq3.iter().any(|y| x == y)).count() as i8;
+    let s2_4count: i8 = seq2.iter().filter(|&x| seq4.iter().any(|y| x == y)).count() as i8;
     println!("{}, {}", s1_3count, s2_4count);
     assert!((s1_3count - s2_4count).abs() >= 0);
     assert!((s1_3count - s2_4count).abs() <= 1);
@@ -60,7 +60,7 @@ fn chromosome_breed() {
 fn population_generate_spontaneously() {
     let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
     let mut pop = Population::new();
-    pop.generate_spontaneously(&target_seq, &3, &5);
+    pop.generate_spontaneously(target_seq, &3, &5);
     assert!(pop.oldsters[0].len() == 3);
     assert!(pop.oldsters[499].len() == 3);
     assert!(pop.oldsters[999].len() == 3);
@@ -70,7 +70,7 @@ fn population_generate_spontaneously() {
 fn population_fitness() {
     let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
     let mut pop = Population::new();
-    pop.generate_spontaneously(&target_seq, &3, &5);
+    pop.generate_spontaneously(target_seq, &3, &5);
     let fit = pop.fitness();
     assert!(0.0 <= fit);
     assert!(1.0 >= fit);
@@ -78,4 +78,8 @@ fn population_fitness() {
 
 #[test]
 fn population_lottery_selection() {
+    let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
+    let mut pop = Population::new();
+    pop.generate_spontaneously(target_seq, &3, &5);
+    assert!(pop.lottery_selection() != None);
 }

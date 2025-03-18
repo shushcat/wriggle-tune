@@ -22,23 +22,22 @@ trait Chromosome {
 }
 
 impl Chromosome for NoteVec {
-
     fn breed(&self, other: &Self) -> [Self; 2] {
         let mut seed_rng = StdRng::from_os_rng();
         let crossover_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
         let mut child1 = NoteVec::new();
         let mut child2 = NoteVec::new();
-	// The following can be compressed with `take()` and
-	// `collect()` (see the StackExchange discussion at
-	// https://stackoverflow.com/questions/40154150/how-do-i-concatenate-two-slices-in-rust),
-	// but I think the following is clearer in this case.
+        // The following can be compressed with `take()` and
+        // `collect()` (see the StackExchange discussion at
+        // https://stackoverflow.com/questions/40154150/how-do-i-concatenate-two-slices-in-rust),
+        // but I think the following is clearer in this case.
         child1.extend_from_slice(&self[..crossover_index]);
         child1.extend_from_slice(&other[crossover_index..]);
         child2.extend_from_slice(&other[..crossover_index]);
         child2.extend_from_slice(&self[crossover_index..]);
 
-	child1.mutate();
-	child2.mutate();
+        child1.mutate();
+        child2.mutate();
 
         [child1, child2]
     }
@@ -102,13 +101,12 @@ impl Chromosome for NoteVec {
 
         let result = (notes_deviation + steps_deviation) / 2.0;
 
-	// Clamp the result.
+        // Clamp the result.
         if result > 0.99 {
             return 1.0;
         } else {
             return result;
         }
-
     }
 
     /// Randomly change a Note in a NoteVec with 50% probability.  For
@@ -121,56 +119,53 @@ impl Chromosome for NoteVec {
     fn mutate(&mut self) -> bool {
         let mut seed_rng = StdRng::from_os_rng();
         let flip: u8 = (seed_rng.random::<u8>()) % 255;
-	let mut mutated: bool = false;
-	if flip > 127 {
-	    // seed_rng = StdRng::from_os_rng();
-	    let mutation_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
-	    let random_note: i8 = (seed_rng.random::<i8>() % 127).abs();
-	    self[mutation_index].0 = random_note;
-	    mutated = true;
-	}
-	mutated
+        let mut mutated: bool = false;
+        if flip > 127 {
+            // seed_rng = StdRng::from_os_rng();
+            let mutation_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
+            let random_note: i8 = (seed_rng.random::<i8>() % 127).abs();
+            self[mutation_index].0 = random_note;
+            mutated = true;
+        }
+        mutated
     }
 
     fn randomize(&mut self, length: usize) {
-	self.clear();
-	let mut seed_rng = StdRng::from_os_rng();
-	// Populate the `NoteVec` with nice new notes.
-	for _ in 0..length {
-	    let random_note: Note = ((seed_rng.random::<i8>() % 127).abs(), 0);
-	    self.push(random_note);
-	}
-
+        self.clear();
+        let mut seed_rng = StdRng::from_os_rng();
+        // Populate the `NoteVec` with nice new notes.
+        for _ in 0..length {
+            let random_note: Note = ((seed_rng.random::<i8>() % 127).abs(), 0);
+            self.push(random_note);
+        }
     }
-
 }
 
 struct Population {
     oldsters: [NoteVec; 1_000],
-    younguns: [NoteVec; 1_000],  // Only used while `evolve()`-ing.
-    size: usize,  // Unnecessary if vector lengths hardcoded.
-    member_fitnesses: f32,  // A sum; normalized in `fitness()`.
+    younguns: [NoteVec; 1_000], // Only used while `evolve()`-ing.
+    size: usize,                // Unnecessary if vector lengths hardcoded.
+    member_fitnesses: f32,      // A sum; normalized in `fitness()`.
     target_seq: NoteVec,
 }
 
 impl Population {
-
     fn new() -> Self {
-	// This would be less of a pain to initialize if I implemented
-	// the `Copy` trait on `NoteVec`, but I think doing that would
-	// make evolving the next generation more expensive since
-	// ownership of each value in `younguns` wouldn't simply be
-	// transferred to `oldsters`.
-	let oldsters = [0; 1_000].map( |_| NoteVec::new());
-	let younguns = [0; 1_000].map( |_| NoteVec::new());
-	let target_seq = NoteVec::new();
-	Population {
-	    oldsters,
-	    younguns,
-	    size: 0,
-	    member_fitnesses: 0.0,
-	    target_seq,
-	}
+        // This would be less of a pain to initialize if I implemented
+        // the `Copy` trait on `NoteVec`, but I think doing that would
+        // make evolving the next generation more expensive since
+        // ownership of each value in `younguns` wouldn't simply be
+        // transferred to `oldsters`.
+        let oldsters = [0; 1_000].map(|_| NoteVec::new());
+        let younguns = [0; 1_000].map(|_| NoteVec::new());
+        let target_seq = NoteVec::new();
+        Population {
+            oldsters,
+            younguns,
+            size: 0,
+            member_fitnesses: 0.0,
+            target_seq,
+        }
     }
 
     /// Generate a new population of `NoteVec`s, with the length of
@@ -178,14 +173,15 @@ impl Population {
     /// function should only be called to jumpstart the whole process;
     /// to evolve an existing population, call `evolve()`.
     fn generate_spontaneously(&mut self, target_seq: NoteVec, p_notes: &i8, p_steps: &i8) {
-	self.target_seq = target_seq;
-	for i in 0..self.oldsters.len(){
-	    // Take ownership of the target sequence.
-	    // Populate the `NoteVec` with nice new notes.
-	    self.oldsters[i].randomize(self.target_seq.len());
-	    self.size = self.size + 1;
-	    self.member_fitnesses = self.member_fitnesses + self.oldsters[i].fitness(&self.target_seq, p_notes, p_steps);
-	}
+        self.target_seq = target_seq;
+        for i in 0..self.oldsters.len() {
+            // Take ownership of the target sequence.
+            // Populate the `NoteVec` with nice new notes.
+            self.oldsters[i].randomize(self.target_seq.len());
+            self.size = self.size + 1;
+            self.member_fitnesses = self.member_fitnesses
+                + self.oldsters[i].fitness(&self.target_seq, p_notes, p_steps);
+        }
     }
 
     // I'm not entirely sure how the ownership semantics should work
@@ -194,24 +190,38 @@ impl Population {
     // to be a reference.  The falloff in fitness may not currently be
     // steep enough for this to work.
     fn lottery_selection(&self) -> Option<&NoteVec> {
-	let p_notes: i8 = 4;  // TODO parameterize
-	let p_steps: i8 = 3;  // TODO parameterize
+        // Need to parameterize everything.  Where should the
+        // parameters be stored?
+        let p_notes: i8 = 4; // TODO parameterize
+        let p_steps: i8 = 3; // TODO parameterize
         let mut seed_rng = StdRng::from_os_rng();
-	// Want a value between 0 and 1, inclusive.
-        let lottery_threshold: f32 = (seed_rng.random::<f32>()) % 1.0;
-        let mut fitness_sum: f32 = 0.0;
         let mut selected: Option<&NoteVec> = None;
+	let lottery_threshold: f32 = (seed_rng.random::<f32>()) % 1.0;
+	let mut lottery_index: usize;
+	while selected == None {
+	    lottery_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
+	    if self.oldsters[lottery_index].fitness(&self.target_seq, &p_notes, &p_steps) >= lottery_threshold {
+                selected = Some(&self.oldsters[lottery_index]);
+	    }
+	}
+
+	// TODO Consider using something that is more like an actual
+	// lottery scheduler.
+	/*
         for i in 0..self.oldsters.len() {
-            fitness_sum = fitness_sum + self.oldsters[i].fitness(&self.target_seq, &p_notes, &p_steps);
-	    // The disjunction here makes sure that a member is still
-	    // selected in the rare case that rounding error
-	    // interferes with selection after summing many members'
-	    // fitnesses.
+            fitness_sum =
+                fitness_sum + self.oldsters[i].fitness(&self.target_seq, &p_notes, &p_steps);
+            // The disjunction here makes sure that a member is still
+            // selected in the rare case that rounding error
+            // interferes with selection after summing many members'
+            // fitnesses.
             if (fitness_sum >= lottery_threshold) || (i == self.oldsters.len() - 1) {
                 selected = Some(&self.oldsters[i]);
                 break;
-	    }
-	}
+            }
+        }
+	*/
+
         selected
     }
 
@@ -219,8 +229,8 @@ impl Population {
     /// be a parameter.  The `member_fitnesses` value should only be
     /// changed when preparing a new population with
     /// `generate_spontaneously()` and during calls to `evolve()`.
-    fn fitness(self) -> f32{
-	self.member_fitnesses / 1000.0
+    fn fitness(self) -> f32 {
+        self.member_fitnesses / 1000.0
     }
 
     fn evolve(self) {
