@@ -6,6 +6,10 @@ mod tests;
 // TODO Replace StdRng with `rand_chacha` for portability.
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
+// Courtesy of _Programming Rust_ by Blandy, Orendorff, and Tindall.
+type GenericError = Box<dyn std::error::Error + Send + Sync + 'static>;
+type GenericResult<T> = std::result::Result<T, GenericError>;
+
 // This might be better as a struct.
 type Note = (i8, i16);
 
@@ -233,9 +237,29 @@ impl Population {
         self.member_fitnesses / 1000.0
     }
 
-    fn evolve(self) {
-        todo!();
+    // Create a new population, then become that population, just like
+    // in real life.
+    fn evolve(self) -> GenericResult<bool> {
+        let p_notes: i8 = 4; // TODO parameterize
+        let p_steps: i8 = 3; // TODO parameterize
+	let mut child1: NoteVec;
+	let mut child2: NoteVec;
+	for i in 0..self.younguns.len() {
+            let parent1 = self.lottery_selection()?;
+            let parent2 = self.lottery_selection()?;
+            [child1, child2] = parent1.breed(parent2);
+	    if child1.fitness(&self.target_seq, &p_notes, &p_steps) > child2.fitness(&self.target_seq, &p_notes, &p_steps) {
+		self.younguns[i] = child1;
+	    } else {
+		self.younguns[i] = child2;
+	    }
+
+	}
+	// make sure younguns and oldsters are the same length
+        self.oldsters = self.younguns;
+	true
     }
+
 }
 
 fn main() {
