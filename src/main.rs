@@ -183,17 +183,33 @@ impl Population {
 	}
     }
 
-    fn lottery_selection(&self) -> NoteVec {
-        todo!();
+    // I'm not entirely sure how the ownership semantics should work
+    // out here.  What does the context in `evolve()` need to do with
+    // the returned `NoteVec`?  The returned `NoteVec` probably needs
+    // to be a reference.
+    fn lottery_selection(&self) -> Option<NoteVec> {
+        let mut seed_rng = StdRng::from_os_rng();
+	// Want a value between 0 and 1, inclusive.
+        let lottery_threshold: f32 = (((seed_rng.random::<f32>()) % 1.0));
+        let fitness_sum: f32 = 0.0;
+        let selected: Option<NoteVec> = None;
+        for i in 0..self.oldsters.len() {
+	    todo!();
+            fitness_sum += self.oldsters[i].fitness();
+	    // The disjunction here makes sure that a member is still selected in the rare case that the random number is larger than the rounding error when summing the fitness levels of the population members.
+            if (fitness_sum >= lottery_threshold) || (i == self.oldsters.len() - 1) {
+                selected = self.oldsters[i];
+                break;
+	    }
+	}
+        return selected;
     }
 
-    /// Calculate the population's `fitness` parameter.
-    // Rather than calculating this, maybe have a `fitness_numer`
-    // and `fitness_denom` in the `Population` struct.  Then there
-    // could be `fitness()` function for `Population` that would
-    // just do the division when called.  The values would need to
-    // be updated each time a population member was polled during
-    // lottery selection.
+    /// Calculate the population's `fitness` parameter.  The
+    /// denominator here should be parameterized.  The
+    /// `member_fitnesses` value should only be changed when preparing
+    /// a new population with `generate_spontaneously()` and during
+    /// `lottery_selection()`.
     fn fitness(self) -> f32{
 	self.member_fitnesses / 1000.0
     }
