@@ -35,7 +35,7 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- [x] Generate population of sequences
 		- [x] Initialize population values to random sequences
 		- [x] Test to make sure it gets setup
-		- [ ] It would be better if `target` were part of the `NoteVec` struct, so let's do that
+		- [x] It would be better if `target` were part of the `Population` struct, so let's do that
 
 - [ ] Get parameters with `clap`
 - [ ] Formalize the contrapuntal part of the fitness function

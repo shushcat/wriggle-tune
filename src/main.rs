@@ -150,6 +150,7 @@ struct Population {
     younguns: [NoteVec; 1_000],  // Only used while `evolve()`-ing.
     size: usize,  // Unnecessary if vector lengths hardcoded.
     member_fitnesses: f32,  // A sum; normalized in `fitness()`.
+    target: NoteVec,
 }
 
 impl Population {
@@ -162,11 +163,13 @@ impl Population {
 	// transferred to `oldsters`.
 	let oldsters = [0; 1_000].map( |_| NoteVec::new());
 	let younguns = [0; 1_000].map( |_| NoteVec::new());
+	let target = NoteVec::new();
 	Population {
 	    oldsters,
 	    younguns,
 	    size: 0,
 	    member_fitnesses: 0.0,
+	    target,
 	}
     }
 
@@ -186,23 +189,28 @@ impl Population {
     // I'm not entirely sure how the ownership semantics should work
     // out here.  What does the context in `evolve()` need to do with
     // the returned `NoteVec`?  The returned `NoteVec` probably needs
-    // to be a reference.
-    fn lottery_selection(&self) -> Option<NoteVec> {
+    // to be a reference.  The falloff in fitness may not currently be
+    // steep enough for this to work.
+    fn lottery_selection(&self) -> Option<&NoteVec> {
+	let p_notes: i8 = 4;  // TODO parameterize
+	let p_steps: i8 = 3;  // TODO parameterize
         let mut seed_rng = StdRng::from_os_rng();
 	// Want a value between 0 and 1, inclusive.
-        let lottery_threshold: f32 = (((seed_rng.random::<f32>()) % 1.0));
-        let fitness_sum: f32 = 0.0;
-        let selected: Option<NoteVec> = None;
+        let lottery_threshold: f32 = (seed_rng.random::<f32>()) % 1.0;
+        let mut fitness_sum: f32 = 0.0;
+        let mut selected: Option<&NoteVec> = None;
         for i in 0..self.oldsters.len() {
-	    todo!();
-            fitness_sum += self.oldsters[i].fitness();
-	    // The disjunction here makes sure that a member is still selected in the rare case that the random number is larger than the rounding error when summing the fitness levels of the population members.
+            fitness_sum = fitness_sum + self.oldsters[i].fitness(&self.target, &p_notes, &p_steps);
+	    // The disjunction here makes sure that a member is still
+	    // selected in the rare case that rounding error
+	    // interferes with selection after summing many members'
+	    // fitnesses.
             if (fitness_sum >= lottery_threshold) || (i == self.oldsters.len() - 1) {
-                selected = self.oldsters[i];
+                selected = Some(&self.oldsters[i]);
                 break;
 	    }
 	}
-        return selected;
+        selected
     }
 
     /// Calculate the population's `fitness` parameter.  The
