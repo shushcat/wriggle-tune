@@ -3,8 +3,6 @@
 #[cfg(test)]
 mod tests;
 
-use std::fmt;
-
 // TODO Replace StdRng with `rand_chacha` for portability.
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
@@ -12,20 +10,6 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 type Note = (i8, i16);
 
 type NoteVec = Vec<Note>;
-
-impl Display for NoteVec {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        // let display_chars = ['·', '●'];
-        for n in self {
-            let n_string: Vec<String> = self
-                .iter()
-                .map(|&(a, b)| format!("({}, {})", a, b))
-                .collect();
-            writeln!(f, "{}", n_string)?;
-        }
-        Ok(())
-    }
-}
 
 trait Chromosome {
     fn breed(&self, other: &Self) -> [Self; 2]
@@ -59,7 +43,9 @@ impl Chromosome for NoteVec {
         [child1, child2]
     }
 
-    /// Display the contents of a `NoteVec`.
+    /// Display the contents of a `NoteVec`.  I would prefer
+    /// implementing `Display` for `NoteVec`, but since `NoteVec` is
+    /// an aliased type, the orphan rule won't allow it.
     fn display(&self) {
         for i in 0..(self.len() - 1) {
             print!("({}, {}), ", self[i].0, self[i].1);

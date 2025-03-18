@@ -68,8 +68,9 @@ fn test_generate_spontaneously() {
     pop.oldsters[1].display();
     assert!(pop.oldsters[0].len() == 3);
     assert!(pop.oldsters[999].len() == 3);
-    for i 0..1000 {
-	println!("{}", pop.oldsters[i]);
+    for i  in 0..1000 {
+	// pop.oldsters[i].display();
+	println!("{:?}", pop.oldsters[i]);
     }
     assert!(0==1);
 }
