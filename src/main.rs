@@ -147,7 +147,7 @@ impl Chromosome for NoteVec {
 
 struct Population {
     oldsters: [NoteVec; 1_000],
-    younguns: [NoteVec; 1_000],
+    younguns: [NoteVec; 1_000],  // Only used while `evolve()`-ing.
     size: usize,  // Unnecessary if vector lengths hardcoded.
     member_fitnesses: f32,  // A sum; normalized in `fitness()`.
 }
@@ -188,14 +188,14 @@ impl Population {
     }
 
     /// Calculate the population's `fitness` parameter.
-    fn calc_fitness(self) {
-        // Rather than calculating this, maybe have a `fitness_numer`
-        // and `fitness_denom` in the `Population` struct.  Then there
-        // could be `fitness()` function for `Population` that would
-        // just do the division when called.  The values would need to
-        // be updated each time a population member was polled during
-        // lottery selection.
-        todo!();
+    // Rather than calculating this, maybe have a `fitness_numer`
+    // and `fitness_denom` in the `Population` struct.  Then there
+    // could be `fitness()` function for `Population` that would
+    // just do the division when called.  The values would need to
+    // be updated each time a population member was polled during
+    // lottery selection.
+    fn fitness(self) -> f32{
+	self.member_fitnesses / 1000.0
     }
 
     fn evolve(self) {
