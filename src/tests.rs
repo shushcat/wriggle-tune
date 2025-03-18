@@ -75,3 +75,7 @@ fn population_fitness() {
     assert!(0.0 <= fit);
     assert!(1.0 >= fit);
 }
+
+#[test]
+fn population_lottery_selection() {
+}

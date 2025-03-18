@@ -16,7 +16,7 @@ trait Chromosome {
     where
         Self: Sized;
     fn display(&self);
-    fn fitness(&self, target: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32;
+    fn fitness(&self, target_seq: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32;
     fn mutate(&mut self) -> bool;
     fn randomize(&mut self, length: usize);
 }
@@ -63,7 +63,7 @@ impl Chromosome for NoteVec {
     /// values around the edges, to avoid infinities near zero and out
     /// of an abundance of caution on the other end, also seemed
     /// prudent.
-    fn fitness(&self, target: &NoteVec, notes_param: &i8, steps_param: &i8) -> f32 {
+    fn fitness(&self, target_seq: &NoteVec, notes_param: &i8, steps_param: &i8) -> f32 {
         let mut notes: isize = 0;
         let mut steps: isize = 0;
 
@@ -73,7 +73,7 @@ impl Chromosome for NoteVec {
         // sequence.
         for i in 0..self.len() {
             notes = notes + 1;
-            steps = steps + (target[i].0 - self[i].0).abs() as isize;
+            steps = steps + (target_seq[i].0 - self[i].0).abs() as isize;
         }
 
         let mut notes_deviation: f32 = (notes as f32 - *notes_param as f32).abs() / 128.0;
@@ -150,7 +150,7 @@ struct Population {
     younguns: [NoteVec; 1_000],  // Only used while `evolve()`-ing.
     size: usize,  // Unnecessary if vector lengths hardcoded.
     member_fitnesses: f32,  // A sum; normalized in `fitness()`.
-    target: NoteVec,
+    target_seq: NoteVec,
 }
 
 impl Population {
@@ -163,13 +163,13 @@ impl Population {
 	// transferred to `oldsters`.
 	let oldsters = [0; 1_000].map( |_| NoteVec::new());
 	let younguns = [0; 1_000].map( |_| NoteVec::new());
-	let target = NoteVec::new();
+	let target_seq = NoteVec::new();
 	Population {
 	    oldsters,
 	    younguns,
 	    size: 0,
 	    member_fitnesses: 0.0,
-	    target,
+	    target_seq,
 	}
     }
 
@@ -177,12 +177,14 @@ impl Population {
     /// each `NoteVec` determined by the target sequence.  This
     /// function should only be called to jumpstart the whole process;
     /// to evolve an existing population, call `evolve()`.
-    fn generate_spontaneously(&mut self, target: &NoteVec, p_notes: &i8, p_steps: &i8) {
+    fn generate_spontaneously(&mut self, target_seq: NoteVec, p_notes: &i8, p_steps: &i8) {
+	self.target_seq = target_seq;
 	for i in 0..self.oldsters.len(){
+	    // Take ownership of the target sequence.
 	    // Populate the `NoteVec` with nice new notes.
-	    self.oldsters[i].randomize(target.len());
+	    self.oldsters[i].randomize(self.target_seq.len());
 	    self.size = self.size + 1;
-	    self.member_fitnesses = self.member_fitnesses + self.oldsters[i].fitness(target, p_notes, p_steps);
+	    self.member_fitnesses = self.member_fitnesses + self.oldsters[i].fitness(&self.target_seq, p_notes, p_steps);
 	}
     }
 
@@ -200,7 +202,7 @@ impl Population {
         let mut fitness_sum: f32 = 0.0;
         let mut selected: Option<&NoteVec> = None;
         for i in 0..self.oldsters.len() {
-            fitness_sum = fitness_sum + self.oldsters[i].fitness(&self.target, &p_notes, &p_steps);
+            fitness_sum = fitness_sum + self.oldsters[i].fitness(&self.target_seq, &p_notes, &p_steps);
 	    // The disjunction here makes sure that a member is still
 	    // selected in the rare case that rounding error
 	    // interferes with selection after summing many members'
@@ -213,11 +215,10 @@ impl Population {
         selected
     }
 
-    /// Calculate the population's `fitness` parameter.  The
-    /// denominator here should be parameterized.  The
-    /// `member_fitnesses` value should only be changed when preparing
-    /// a new population with `generate_spontaneously()` and during
-    /// `lottery_selection()`.
+    /// Calculate the population fitness.  The denominator here should
+    /// be a parameter.  The `member_fitnesses` value should only be
+    /// changed when preparing a new population with
+    /// `generate_spontaneously()` and during calls to `evolve()`.
     fn fitness(self) -> f32{
 	self.member_fitnesses / 1000.0
     }

@@ -36,6 +36,8 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 		- [x] Initialize population values to random sequences
 		- [x] Test to make sure it gets setup
 		- [x] It would be better if `target` were part of the `Population` struct, so let's do that
+	- [x] Draft `lottery_selection()`
+	- [ ] Test & revise `lottery_selection()`
 
 - [ ] Get parameters with `clap`
 - [ ] Formalize the contrapuntal part of the fitness function
