@@ -149,7 +149,7 @@ struct Population {
     oldsters: [NoteVec; 1_000],
     younguns: [NoteVec; 1_000], // Only used while `evolve()`-ing.
     size: usize,                // Unnecessary if vector lengths hardcoded.
-    member_fitnesses: f32,      // A sum; normalized in `fitness()`.
+    fitness_sum: f32,      // Normalized in `fitness()`.
     target_seq: NoteVec,
 }
 
@@ -167,7 +167,7 @@ impl Population {
             oldsters,
             younguns,
             size: 0,
-            member_fitnesses: 0.0,
+            fitness_sum: 0.0,
             target_seq,
         }
     }
@@ -183,7 +183,7 @@ impl Population {
             // Populate the `NoteVec` with nice new notes.
             self.oldsters[i].randomize(self.target_seq.len());
             self.size = self.size + 1;
-            self.member_fitnesses = self.member_fitnesses
+            self.fitness_sum = self.fitness_sum
                 + self.oldsters[i].fitness(&self.target_seq, p_notes, p_steps);
         }
     }
@@ -201,9 +201,19 @@ impl Population {
         let p_steps: i8 = 3; // TODO parameterize
         let mut seed_rng = StdRng::from_os_rng();
         let mut selected: Option<&NoteVec> = None;
-	let lottery_threshold: f32 = (seed_rng.random::<f32>()) % 1.0;
+	// TODO The problem is that the lottery threshold is sometimes
+	// higher than any sequence in the population.  To minimize
+	// the number of polls, calculate the population standard
+	// deviation, then use the population mean plus the standard
+	// deviation as the modulus in the expression setting
+	// `lottery_threshold`.  Also, the names of all the variables
+	// in this function are in need of revision.
+	//
+	// In the mean time (no pun intended, har-har), use the
+	// population mean as the modulus, even though I don't think
+	// that will exert a strong enough selective pressure.
+	let lottery_threshold: f32 = (seed_rng.random::<f32>()) % (self.fitness_sum / self.oldsters.len() as f32);
 	let mut lottery_index: usize;
-	todo!(); // The root of all woe.
 	while selected == None {
 	    lottery_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
 	    if self.oldsters[lottery_index].fitness(&self.target_seq, &p_notes, &p_steps) >= lottery_threshold {
@@ -232,11 +242,11 @@ impl Population {
     }
 
     /// Calculate the population fitness.  The denominator here should
-    /// be a parameter.  The `member_fitnesses` value should only be
+    /// be a parameter.  The `fitness_sum` value should only be
     /// changed when preparing a new population with
     /// `generate_spontaneously()` and during calls to `evolve()`.
     fn fitness(self) -> f32 {
-        self.member_fitnesses / 1000.0
+        self.fitness_sum / 1000.0
     }
 
     // Create a new population, then become that population, just like
