@@ -37,10 +37,17 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 		- [x] Test to make sure it gets setup
 		- [x] It would be better if `target` were part of the `Population` struct, so let's do that
 	- [x] Draft `lottery_selection()`
-	- [ ] Test & revise `lottery_selection()`
+	- [x] Test & revise `lottery_selection()`
+	- [x] Draft `evolve()`
+	- [ ] Test & revise `evolve()`
+	- [ ] Fix infinite loop in `lottery_selection()`
+		- Thresholds are being set that are higher than any items in the population.  Two potential fixes:
+			1. threshold::mean
+			2. Randomly pick an item, then pick it with a probability determined by its fitness.
+			3. Actually do the lottery selection thing as intended.
+
 
 - [ ] Get parameters with `clap`
-- [ ] Formalize the contrapuntal part of the fitness function
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
 - [ ] Output the generated sequence as midi.
 - [ ] Read an input sequence from midi.
@@ -50,9 +57,9 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 
 -----
 
-Maybe later:
+Wishlist:
 
-
+- [ ] Formalize the contrapuntal part of the fitness function
 - [ ] Convert `Note` to a struct
 - [ ] Implement `Display` trait for `NoteVec`; see `game_of_life` class notes
 

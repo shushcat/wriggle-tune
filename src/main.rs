@@ -203,6 +203,7 @@ impl Population {
         let mut selected: Option<&NoteVec> = None;
 	let lottery_threshold: f32 = (seed_rng.random::<f32>()) % 1.0;
 	let mut lottery_index: usize;
+	todo!(); // The root of all woe.
 	while selected == None {
 	    lottery_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
 	    if self.oldsters[lottery_index].fitness(&self.target_seq, &p_notes, &p_steps) >= lottery_threshold {
@@ -248,13 +249,16 @@ impl Population {
 	let youngeruns = [0; 1_000].map(|_| NoteVec::new());
 
 	for i in 0..self.younguns.len() {
+
 	    // See
 	    // https://stackoverflow.com/questions/28572101/what-is-a-clean-way-to-convert-a-result-into-an-option#28572170
 	    // for info on converting `Option`s to `Result`s with
 	    // `ok()` and pals.
             let parent1 = self.lottery_selection().ok_or("Lottery malfunction")?;
             let parent2 = self.lottery_selection().ok_or("Lottery malfunction")?;
+
             [child1, child2] = parent1.breed(parent2);
+
 	    // Pick the fitter of the two children at each step.  I am
 	    // told there is precedent for this.
 	    if child1.fitness(&self.target_seq, &p_notes, &p_steps) > child2.fitness(&self.target_seq, &p_notes, &p_steps) {
@@ -262,13 +266,17 @@ impl Population {
 	    } else {
 		self.younguns[i] = child2;
 	    }
+
 	}
-	// TODO make sure younguns and oldsters are the same length
+
+	assert!(self.oldsters.len() == self.younguns.len());
+
 	// See https://doc.rust-lang.org/std/mem/fn.replace.html.  The
 	// `std::mem::swap()` function would also do the trick, but
 	// using it would take another line.  `take()` would work if
 	// I'd implemented the `Default` trait.
 	self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
+
 	Ok(true)
     }
 
