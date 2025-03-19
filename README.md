@@ -52,9 +52,11 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 			1. threshold::mean
 			2. Randomly pick an item, then pick it with a probability determined by its fitness.
 			3. Actually do the lottery selection thing as intended.
+	- [x] Test `standard_deviation()`
 	- [ ] Test `lottery_selection()`
 	- [ ] Test & revise `evolve()`
-
+		- [ ] Make sure population fitness increases over time.
+		- [ ] Use parameters stored in `Population` rather than passing
 
 - [ ] Get parameters with `clap`
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.

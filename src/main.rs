@@ -153,7 +153,6 @@ struct Population {
     target_notes: i8,
     target_steps: i8,
     target_seq: NoteVec,
-
 }
 
 impl Population {
@@ -289,10 +288,11 @@ impl Population {
 
 	assert!(self.oldsters.len() == self.younguns.len());
 
-	// See https://doc.rust-lang.org/std/mem/fn.replace.html.  The
-	// `std::mem::swap()` function would also do the trick, but
-	// using it would take another line.  `take()` would work if
-	// I'd implemented the `Default` trait.
+	// See https://doc.rust-lang.org/std/mem/fn.replace.html and
+	// _Programming Rust_ chapter 4.  The `std::mem::swap()`
+	// function would also do the trick, but using it would take
+	// another line.  `take()` would work if I'd implemented
+	// the `Default` trait.
 	self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
 
 	Ok(true)
@@ -302,12 +302,15 @@ impl Population {
 	self.fitness_sum / self.oldsters.len() as f32
     }
 
-    // Very adapted from https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html.
+    // Very adapted from
+    // https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html,
+    // with some help from an LLM for the closure syntax.
     fn standard_deviation(&self) -> f32 {
 	let mean = self.mean();
 	let variance = self.oldsters.iter().map(|n_vec| {
-	    let first_note = n_vec.first().map_or(0.0, |&(n, _)| n as f32);
-	    let diff = mean - first_note;
+	    // let first_note = n_vec.first().map_or(0.0, |&(n, _)| n as f32);
+	    let fitness = n_vec.fitness(&self.target_seq, &self.target_notes, &self.target_steps);
+	    let diff = mean - fitness;
 	    diff * diff
 	}).sum::<f32>() / self.oldsters.len() as f32;
 	variance.sqrt()
