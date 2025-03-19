@@ -39,20 +39,21 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- [x] Draft `lottery_selection()`
 	- [x] Test & revise `lottery_selection()`
 	- [x] Draft `evolve()`
-	- [ ] Test & revise `evolve()`
 	- [x] Fix infinite loop in `lottery_selection()`
 		- Thresholds are being set that are higher than any items in the population.
-		- [ ] Set the threshold modulus to the population as a hot-fix, and
-		- [ ] Set the threshold modulus to the population mean plus one standard deviation
-			- [ ] Calculate a running standard deviation using Welford's method; see
+		- [x] Set the threshold modulus to the population as a hot-fix, and
+		- [x] Set the threshold modulus to the population mean plus one standard deviation
+			- See the _Rust cookbook_'s section on this at https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html
+			- ~~Calculate a running standard deviation using Welford's method~~  Just use the _Rust cookbook_ since I only need to calculate the standard deviation once per population; in future, perhaps see
 				- https://stackoverflow.com/questions/1174984/how-to-efficiently-calculate-a-running-standard-deviation
 				- https://rosettacode.org/wiki/Cumulative_standard_deviation#Rust
 				- https://www.johndcook.com/blog/standard_deviation/
 				- https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford%27s_online_algorithm
-				- Ignore the _Rust cookbook_'s section on this (https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html) because it doesn't describe a running calculation
 			1. threshold::mean
 			2. Randomly pick an item, then pick it with a probability determined by its fitness.
 			3. Actually do the lottery selection thing as intended.
+	- [ ] Test `lottery_selection()`
+	- [ ] Test & revise `evolve()`
 
 
 - [ ] Get parameters with `clap`

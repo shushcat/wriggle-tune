@@ -150,7 +150,10 @@ struct Population {
     younguns: [NoteVec; 1_000], // Only used while `evolve()`-ing.
     size: usize,                // Unnecessary if vector lengths hardcoded.
     fitness_sum: f32,      // Normalized in `fitness()`.
+    target_notes: i8,
+    target_steps: i8,
     target_seq: NoteVec,
+
 }
 
 impl Population {
@@ -168,6 +171,8 @@ impl Population {
             younguns,
             size: 0,
             fitness_sum: 0.0,
+	    target_notes: 0,
+	    target_steps: 0,
             target_seq,
         }
     }
@@ -176,7 +181,9 @@ impl Population {
     /// each `NoteVec` determined by the target sequence.  This
     /// function should only be called to jumpstart the whole process;
     /// to evolve an existing population, call `evolve()`.
-    fn generate_spontaneously(&mut self, target_seq: NoteVec, p_notes: &i8, p_steps: &i8) {
+    fn generate_spontaneously(&mut self, target_seq: NoteVec, target_notes: &i8, target_steps: &i8) {
+	self.target_notes = *target_notes;
+	self.target_steps = *target_steps;
         self.target_seq = target_seq;
         for i in 0..self.oldsters.len() {
             // Take ownership of the target sequence.
@@ -184,7 +191,7 @@ impl Population {
             self.oldsters[i].randomize(self.target_seq.len());
             self.size = self.size + 1;
             self.fitness_sum = self.fitness_sum
-                + self.oldsters[i].fitness(&self.target_seq, p_notes, p_steps);
+                + self.oldsters[i].fitness(&self.target_seq, &self.target_notes, &self.target_steps);
         }
     }
 
@@ -212,7 +219,8 @@ impl Population {
 	// In the mean time (no pun intended, har-har), use the
 	// population mean as the modulus, even though I don't think
 	// that will exert a strong enough selective pressure.
-	let lottery_threshold: f32 = (seed_rng.random::<f32>()) % (self.fitness_sum / self.oldsters.len() as f32);
+	// TODO This should be mean plus standard deviation.
+	let lottery_threshold: f32 = (seed_rng.random::<f32>()) % (self.mean() + self.standard_deviation());
 	let mut lottery_index: usize;
 	while selected == None {
 	    lottery_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
@@ -288,6 +296,21 @@ impl Population {
 	self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
 
 	Ok(true)
+    }
+
+    fn mean(&self) -> f32 {
+	self.fitness_sum / self.oldsters.len() as f32
+    }
+
+    // Very adapted from https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html.
+    fn standard_deviation(&self) -> f32 {
+	let mean = self.mean();
+	let variance = self.oldsters.iter().map(|n_vec| {
+	    let first_note = n_vec.first().map_or(0.0, |&(n, _)| n as f32);
+	    let diff = mean - first_note;
+	    diff * diff
+	}).sum::<f32>() / self.oldsters.len() as f32;
+	variance.sqrt()
     }
 
 }
