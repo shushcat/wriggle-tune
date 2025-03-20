@@ -1,6 +1,6 @@
 # wriggle-tune
 
-This is a small program that uses a genetic algorithm to evolve (questionably) musical accompaniments to short sequences of notes.
+This is a small program that uses a genetic algorithm to evolve (questionably---see this [**demo** video](https://media.pdx.edu/media/t/1_4vmm540h)) musical accompaniments to short sequences of notes.
 At present, the user must type in notes at the command line as midi note numbers, after which the program evolves several generations of sequences, then returns a sequence from the final generation.
 
 For instance, if you call the program with `wriggle-tune 9 60 60 60`, that will select for sequences of three notes that differ from note 60 (which is C3 or C4, depending on who you ask) by a total of 9 half-steps.
