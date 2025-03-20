@@ -149,7 +149,7 @@ struct Population {
     oldsters: [NoteVec; 1_000],
     younguns: [NoteVec; 1_000], // Only used while `evolve()`-ing.
     size: usize,                // Unnecessary if vector lengths hardcoded.
-    fitness_sum: f32,      // Normalized in `fitness()`.
+    fitness_sum: f32,           // Normalized in `fitness()`.
     target_notes: i8,
     target_steps: i8,
     target_seq: NoteVec,
@@ -170,8 +170,8 @@ impl Population {
             younguns,
             size: 0,
             fitness_sum: 0.0,
-	    target_notes: 0,
-	    target_steps: 0,
+            target_notes: 0,
+            target_steps: 0,
             target_seq,
         }
     }
@@ -180,9 +180,14 @@ impl Population {
     /// each `NoteVec` determined by the target sequence.  This
     /// function should only be called to jumpstart the whole process;
     /// to evolve an existing population, call `evolve()`.
-    fn generate_spontaneously(&mut self, target_seq: NoteVec, target_notes: &i8, target_steps: &i8) {
-	self.target_notes = *target_notes;
-	self.target_steps = *target_steps;
+    fn generate_spontaneously(
+        &mut self,
+        target_seq: NoteVec,
+        target_notes: &i8,
+        target_steps: &i8,
+    ) {
+        self.target_notes = *target_notes;
+        self.target_steps = *target_steps;
         self.target_seq = target_seq;
         for i in 0..self.oldsters.len() {
             // Take ownership of the target sequence.
@@ -190,60 +195,39 @@ impl Population {
             self.oldsters[i].randomize(self.target_seq.len());
             self.size = self.size + 1;
             self.fitness_sum = self.fitness_sum
-                + self.oldsters[i].fitness(&self.target_seq, &self.target_notes, &self.target_steps);
+                + self.oldsters[i].fitness(
+                    &self.target_seq,
+                    &self.target_notes,
+                    &self.target_steps,
+                );
         }
     }
 
-    // I'm not entirely sure how the ownership semantics should work
-    // out here.  What does the context in `evolve()` need to do with
-    // the returned `NoteVec`?  The returned `NoteVec` probably needs
-    // to be a reference.  The falloff in fitness may not currently be
-    // steep enough for this to work.
-    // fn lottery_selection(&self) -> Option<&NoteVec> {
-    fn lottery_selection(&self) -> Option<&NoteVec> {
-        // Need to parameterize everything.  Where should the
-        // parameters be stored?
-        let p_notes: i8 = 4; // TODO parameterize
-        let p_steps: i8 = 3; // TODO parameterize
+    /// This function chooses a population member, weighted according
+    /// to members' fitnesses.  The `fitness_threshold` is used as a
+    /// modulus to make sure that the threshold for picking a
+    /// population member isn't set too high.
+    fn weighted_selection(&self) -> Option<&NoteVec> {
         let mut seed_rng = StdRng::from_os_rng();
         let mut selected: Option<&NoteVec> = None;
-	// TODO The problem is that the lottery threshold is sometimes
-	// higher than any sequence in the population.  To minimize
-	// the number of polls, calculate the population standard
-	// deviation, then use the population mean plus the standard
-	// deviation as the modulus in the expression setting
-	// `lottery_threshold`.  Also, the names of all the variables
-	// in this function are in need of revision.
-	//
-	// In the mean time (no pun intended, har-har), use the
-	// population mean as the modulus, even though I don't think
-	// that will exert a strong enough selective pressure.
-	// TODO This should be mean plus standard deviation.
-	let lottery_threshold: f32 = (seed_rng.random::<f32>()) % (self.mean() + self.standard_deviation());
-	let mut lottery_index: usize;
-	while selected == None {
-	    lottery_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
-	    if self.oldsters[lottery_index].fitness(&self.target_seq, &p_notes, &p_steps) >= lottery_threshold {
-                selected = Some(&self.oldsters[lottery_index]);
-	    }
-	}
-
-	// TODO Consider using something that is more like an actual
-	// lottery scheduler.
-	/*
-        for i in 0..self.oldsters.len() {
-            fitness_sum =
-                fitness_sum + self.oldsters[i].fitness(&self.target_seq, &p_notes, &p_steps);
-            // The disjunction here makes sure that a member is still
-            // selected in the rare case that rounding error
-            // interferes with selection after summing many members'
-            // fitnesses.
-            if (fitness_sum >= lottery_threshold) || (i == self.oldsters.len() - 1) {
-                selected = Some(&self.oldsters[i]);
-                break;
+        let flip_modulus: f32 = self.mean() + (3.0 * self.standard_deviation());
+        let flip: f32 = if flip_modulus < 0.1 {
+	    0.1
+	} else {
+	    (seed_rng.random::<f32>()) % flip_modulus
+	};
+        let mut population_index: usize;
+        while selected == None {
+            population_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
+            if self.oldsters[population_index].fitness(
+                &self.target_seq,
+                &self.target_notes,
+                &self.target_steps,
+            ) >= flip
+            {
+                selected = Some(&self.oldsters[population_index]);
             }
         }
-	*/
 
         selected
     }
@@ -252,7 +236,7 @@ impl Population {
     /// be a parameter.  The `fitness_sum` value should only be
     /// changed when preparing a new population with
     /// `generate_spontaneously()` and during calls to `evolve()`.
-    fn fitness(self) -> f32 {
+    fn fitness(&self) -> f32 {
         self.fitness_sum / 1000.0
     }
 
@@ -261,61 +245,66 @@ impl Population {
     fn evolve(&mut self) -> GenericResult<bool> {
         let p_notes: i8 = 4; // TODO parameterize
         let p_steps: i8 = 3; // TODO parameterize
-	let mut child1: NoteVec;
-	let mut child2: NoteVec;
-	let youngeruns = [0; 1_000].map(|_| NoteVec::new());
+        let mut child1: NoteVec;
+        let mut child2: NoteVec;
+        let youngeruns = [0; 1_000].map(|_| NoteVec::new());
 
-	for i in 0..self.younguns.len() {
-
-	    // See
-	    // https://stackoverflow.com/questions/28572101/what-is-a-clean-way-to-convert-a-result-into-an-option#28572170
-	    // for info on converting `Option`s to `Result`s with
-	    // `ok()` and pals.
-            let parent1 = self.lottery_selection().ok_or("Lottery malfunction")?;
-            let parent2 = self.lottery_selection().ok_or("Lottery malfunction")?;
+        for i in 0..self.younguns.len() {
+            // See
+            // https://stackoverflow.com/questions/28572101/what-is-a-clean-way-to-convert-a-result-into-an-option#28572170
+            // for info on converting `Option`s to `Result`s with
+            // `ok()` and pals.
+            let parent1 = self.weighted_selection().ok_or("Lottery malfunction")?;
+            let parent2 = self.weighted_selection().ok_or("Lottery malfunction")?;
 
             [child1, child2] = parent1.breed(parent2);
 
-	    // Pick the fitter of the two children at each step.  I am
-	    // told there is precedent for this.
-	    if child1.fitness(&self.target_seq, &p_notes, &p_steps) > child2.fitness(&self.target_seq, &p_notes, &p_steps) {
-		self.younguns[i] = child1;
-	    } else {
-		self.younguns[i] = child2;
-	    }
+            // Pick the fitter of the two children at each step.  I am
+            // told there is precedent for this.
+            if child1.fitness(&self.target_seq, &p_notes, &p_steps)
+                > child2.fitness(&self.target_seq, &p_notes, &p_steps)
+            {
+                self.younguns[i] = child1;
+            } else {
+                self.younguns[i] = child2;
+            }
+        }
 
-	}
+        assert!(self.oldsters.len() == self.younguns.len());
 
-	assert!(self.oldsters.len() == self.younguns.len());
+        // See https://doc.rust-lang.org/std/mem/fn.replace.html and
+        // _Programming Rust_ chapter 4.  The `std::mem::swap()`
+        // function would also do the trick, but using it would take
+        // another line.  `take()` would work if I'd implemented
+        // the `Default` trait.
+        self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
 
-	// See https://doc.rust-lang.org/std/mem/fn.replace.html and
-	// _Programming Rust_ chapter 4.  The `std::mem::swap()`
-	// function would also do the trick, but using it would take
-	// another line.  `take()` would work if I'd implemented
-	// the `Default` trait.
-	self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
-
-	Ok(true)
+        Ok(true)
     }
 
     fn mean(&self) -> f32 {
-	self.fitness_sum / self.oldsters.len() as f32
+        self.fitness_sum / self.oldsters.len() as f32
     }
 
     // Very adapted from
     // https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html,
     // with some help from an LLM for the closure syntax.
     fn standard_deviation(&self) -> f32 {
-	let mean = self.mean();
-	let variance = self.oldsters.iter().map(|n_vec| {
-	    // let first_note = n_vec.first().map_or(0.0, |&(n, _)| n as f32);
-	    let fitness = n_vec.fitness(&self.target_seq, &self.target_notes, &self.target_steps);
-	    let diff = mean - fitness;
-	    diff * diff
-	}).sum::<f32>() / self.oldsters.len() as f32;
-	variance.sqrt()
+        let mean = self.mean();
+        let variance = self
+            .oldsters
+            .iter()
+            .map(|n_vec| {
+                // let first_note = n_vec.first().map_or(0.0, |&(n, _)| n as f32);
+                let fitness =
+                    n_vec.fitness(&self.target_seq, &self.target_notes, &self.target_steps);
+                let diff = mean - fitness;
+                diff * diff
+            })
+            .sum::<f32>()
+            / self.oldsters.len() as f32;
+        variance.sqrt()
     }
-
 }
 
 fn main() {

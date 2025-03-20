@@ -74,6 +74,10 @@ Wishlist:
 - [ ] Convert `Note` to a struct
 - [ ] Implement `Display` trait for `NoteVec`; see `game_of_life` class notes
 
+Obvious speedups:
+
+- Cache population fitness standard deviation and mean
+
 ## Resources
 
 - Look into https://en.wikipedia.org/wiki/Contrapuntal_motion; think about a fitness function for contrapuntal motion.

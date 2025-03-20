@@ -93,7 +93,7 @@ fn population_lottery_selection() {
     let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
     let mut pop = Population::new();
     pop.generate_spontaneously(target_seq, &3, &5);
-    assert!(pop.lottery_selection() != None);
+    assert!(pop.weighted_selection() != None);
 }
 
 #[test]
@@ -102,5 +102,9 @@ fn population_evolve() {
     let mut pop = Population::new();
     pop.generate_spontaneously(target_seq, &3, &5);
     println!("{}", pop.fitness());
-    assert!(1==0);
+    let _ = pop.evolve();
+    println!("{}", pop.fitness());
+    let _ = pop.evolve();
+    println!("{}", pop.fitness());
+    assert!(1 == 0);
 }
