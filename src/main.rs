@@ -148,7 +148,6 @@ impl Chromosome for NoteVec {
 struct Population {
     oldsters: [NoteVec; 1_000],
     younguns: [NoteVec; 1_000], // Only used while `evolve()`-ing.
-    size: usize,                // Unnecessary if vector lengths hardcoded.
     fitness_sum: f32,           // Normalized in `fitness()`.
     target_notes: i8,
     target_steps: i8,
@@ -168,7 +167,6 @@ impl Population {
         Population {
             oldsters,
             younguns,
-            size: 0,
             fitness_sum: 0.0,
             target_notes: 0,
             target_steps: 0,
@@ -193,14 +191,25 @@ impl Population {
             // Take ownership of the target sequence.
             // Populate the `NoteVec` with nice new notes.
             self.oldsters[i].randomize(self.target_seq.len());
-            self.size = self.size + 1;
-            self.fitness_sum = self.fitness_sum
-                + self.oldsters[i].fitness(
-                    &self.target_seq,
-                    &self.target_notes,
-                    &self.target_steps,
-                );
+	    // Call `update_stats()` here once it's updated to
+	    // generate running statistics.
         }
+	self.update_stats();
+    }
+
+    /// This function updates the statistics carried by a `Population`
+    /// struct.  For the sake of efficiency, it should be updated to
+    /// generate running statistics.
+    fn update_stats(&mut self) {
+	self.fitness_sum = 0.0;
+	for i in 0..self.oldsters.len() {
+	    self.fitness_sum = self.fitness_sum
+		+ self.oldsters[i].fitness(
+		    &self.target_seq,
+		    &self.target_notes,
+		    &self.target_steps,
+		);
+	}
     }
 
     /// This function chooses a population member, weighted according
@@ -278,6 +287,10 @@ impl Population {
         // another line.  `take()` would work if I'd implemented
         // the `Default` trait.
         self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
+	// TODO update all the population stats here.
+	self.update_stats();
+	print!("oldsters:");
+	self.oldsters.first().unwrap().display();
 
         Ok(true)
     }

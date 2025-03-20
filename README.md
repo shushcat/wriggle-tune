@@ -36,10 +36,10 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 		- [x] Initialize population values to random sequences
 		- [x] Test to make sure it gets setup
 		- [x] It would be better if `target` were part of the `Population` struct, so let's do that
-	- [x] Draft `lottery_selection()`
-	- [x] Test & revise `lottery_selection()`
+	- [x] Draft `weighted_selection()`
+	- [x] Test & revise `weighted_selection()`
 	- [x] Draft `evolve()`
-	- [x] Fix infinite loop in `lottery_selection()`
+	- [x] Fix infinite loop in `weighted_selection()`
 		- Thresholds are being set that are higher than any items in the population.
 		- [x] Set the threshold modulus to the population as a hot-fix, and
 		- [x] Set the threshold modulus to the population mean plus one standard deviation
@@ -53,9 +53,9 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 			2. Randomly pick an item, then pick it with a probability determined by its fitness.
 			3. Actually do the lottery selection thing as intended.
 	- [x] Test `standard_deviation()`
-	- [ ] Test `lottery_selection()`
+	- [x] Test `weighted_selection()`
 	- [ ] Test & revise `evolve()`
-		- [ ] Make sure population fitness increases over time.
+		- [x] Make sure population fitness increases over time.
 		- [ ] Use parameters stored in `Population` rather than passing
 
 - [ ] Get parameters with `clap`

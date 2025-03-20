@@ -101,10 +101,11 @@ fn population_evolve() {
     let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
     let mut pop = Population::new();
     pop.generate_spontaneously(target_seq, &3, &5);
-    println!("{}", pop.fitness());
+    let fit1 = pop.fitness();
     let _ = pop.evolve();
-    println!("{}", pop.fitness());
-    let _ = pop.evolve();
-    println!("{}", pop.fitness());
-    assert!(1 == 0);
+    let fit2 = pop.fitness();
+    assert!(fit1 < fit2);
+    _ = pop.evolve();
+    let fit1 = pop.fitness();
+    assert!(fit1 > fit2);
 }
