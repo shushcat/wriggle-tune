@@ -59,6 +59,7 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 		- [x] Make sure population fitness increases over time.
 		- [x] Use parameters stored in `Population` rather than passing
 - [ ] Get parameters with `clap`
+	-
 - [ ] Input target sequence with midi
 
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
@@ -66,7 +67,7 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 - [ ] Read an input sequence from midi.
 - [ ] Detect a repeated phrase (allowing for some degree of imprecision) from midi input and treat that as a target sequence.
 - [ ] Tidy up
-	- [ ] Disallow dead code
+	- [x] Disallow dead code
 
 -----
 
@@ -75,8 +76,8 @@ Wishlist:
 - [ ] Formalize the contrapuntal part of the fitness function
 - [ ] Convert `Note` to a struct
 - [ ] Implement `Display` trait for `NoteVec`; see `game_of_life` class notes
-
-Obvious speedups:
+- [ ] Replace StdRng with `rand_chacha` for portability
+- [ ] Cache `NoteVec` fitnesses
 
 ## Resources
 

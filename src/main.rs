@@ -1,9 +1,6 @@
-#![allow(dead_code)] // TODO Get rid of this nonsense.
-
 #[cfg(test)]
 mod tests;
 
-// TODO Replace StdRng with `rand_chacha` for portability.
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 // Courtesy of _Programming Rust_ by Blandy, Orendorff, and Tindall.
@@ -125,7 +122,6 @@ impl Chromosome for NoteVec {
         let flip: u8 = (seed_rng.random::<u8>()) % 255;
         let mut mutated: bool = false;
         if flip > 127 {
-            // seed_rng = StdRng::from_os_rng();
             let mutation_index: usize = ((seed_rng.random::<u32>()) % (self.len() as u32)) as usize;
             let random_note: i8 = (seed_rng.random::<i8>() % 127).abs();
             self[mutation_index].0 = random_note;
@@ -134,10 +130,10 @@ impl Chromosome for NoteVec {
         mutated
     }
 
+    /// Populate the `NoteVec` with some nice new notes.
     fn randomize(&mut self, length: usize) {
         self.clear();
         let mut seed_rng = StdRng::from_os_rng();
-        // Populate the `NoteVec` with nice new notes.
         for _ in 0..length {
             let random_note: Note = ((seed_rng.random::<i8>() % 127).abs(), 0);
             self.push(random_note);
@@ -157,12 +153,11 @@ struct Population {
 }
 
 impl Population {
+    /// This would be less of a pain to initialize if I implemented
+    /// the `Copy` trait on `NoteVec`, but I think leaving it this
+    /// way is preferable since I only ever want to transfer
+    /// ownership of `younguns` to `oldsters`, not to copy.
     fn new() -> Self {
-        // This would be less of a pain to initialize if I implemented
-        // the `Copy` trait on `NoteVec`, but I think doing that would
-        // make evolving the next generation more expensive since
-        // ownership of each value in `younguns` wouldn't simply be
-        // transferred to `oldsters`.
         let oldsters = [0; 1_000].map(|_| NoteVec::new());
         let younguns = [0; 1_000].map(|_| NoteVec::new());
         let target_seq = NoteVec::new();
@@ -252,7 +247,7 @@ impl Population {
     /// changed when preparing a new population with
     /// `generate_spontaneously()` and during calls to `evolve()`.
     fn fitness(&self) -> f32 {
-        self.fitness_sum / 1000.0
+        self.fitness_sum / self.oldsters.len() as f32
     }
 
     // Create a new population, then become that population, just like
@@ -305,17 +300,15 @@ impl Population {
 
     // Very adapted from
     // https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html,
-    // with some help from an LLM for the closure syntax.
+    // with some help from an LLM for the syntax in the closure.
     fn set_standard_dev(&mut self) {
-        let mean = self.mean;
         let variance = self
             .oldsters
             .iter()
             .map(|n_vec| {
-                // let first_note = n_vec.first().map_or(0.0, |&(n, _)| n as f32);
                 let fitness =
                     n_vec.fitness(&self.target_seq, &self.target_notes, &self.target_steps);
-                let diff = mean - fitness;
+                let diff = self.mean - fitness;
                 diff * diff
             })
             .sum::<f32>()
@@ -324,8 +317,16 @@ impl Population {
     }
 }
 
-fn main() {
+fn main() -> GenericResult<()> {
     let test_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
     test_seq.display();
-    println!("Hello, primordial ooze!");
+    let mut pop = Population::new();
+    let target_notes = 3;
+    let target_steps = 3;
+    pop.generate_spontaneously(test_seq, &target_notes, &target_steps);
+    for _ in 0..10 {
+	pop.evolve()?;
+	println!("fitness: {}", pop.fitness());
+    }
+    Ok(())
 }
