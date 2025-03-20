@@ -63,6 +63,7 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- For now, just get `target_notes`, `target_steps`, and `src_seq`
 - [ ] Output the midi sequence
 	- [x] Pick the midi crate; use `midir`: https://crates.io/crates/midir
+	- [ ] Play sequence to `timidity` or `fluidsynth`?  To Renoise?
 - [ ] Input target sequence with midi
 
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
