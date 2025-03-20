@@ -5,7 +5,7 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use clap::Parser;
 
-use std::error::Error;
+// use std::error::Error;
 use std::io::{stdin, stdout, Write};
 use std::thread::sleep;
 use std::time::Duration;
@@ -260,7 +260,8 @@ impl Population {
             (seed_rng.random::<f32>()) % flip_modulus
         };
         let mut population_index: usize;
-        while selected == None {
+	let mut tries = 0;
+        while selected == None && tries < 10_000{
             population_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
             if self.oldsters[population_index].fitness(
                 &self.src_seq,
@@ -270,6 +271,7 @@ impl Population {
             {
                 selected = Some(&self.oldsters[population_index]);
             }
+	    tries = tries + 1;
         }
 
         selected
@@ -348,6 +350,19 @@ impl Population {
     }
 }
 
+fn play_notes(conn_out: &mut midir::MidiOutputConnection, notes: &[(u8, u64)]) -> GenericResult<()> {
+    const NOTE_ON_MSG: u8 = 0x90;
+    const NOTE_OFF_MSG: u8 = 0x80;
+    const VELOCITY: u8 = 0x64;
+    sleep(Duration::from_millis(4 * 150));
+    for &(note, duration) in notes {
+	let _ = conn_out.send(&[NOTE_ON_MSG, note, VELOCITY]);
+	sleep(Duration::from_millis(duration * 150));
+	let _ = conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY]);
+    }
+    Ok(())
+}
+
 // I've aped a bunch from
 // https://docs.rs/crate/midir/0.10.1/source/examples/test_play.rs
 // while prototyping the midi output here.
@@ -396,34 +411,17 @@ fn main() -> GenericResult<()> {
         pop.evolve()?;
     }
 
-    pop.weighted_selection().unwrap().display();
+    let selected = pop.weighted_selection().ok_or("Lottery malfunction.")?;
 
     println!("\nOpening connection");
     let mut conn_out = midi_out.connect(out_port, "midir-test")?;
     println!("Connection open. Listen!");
-    {
-        // Define a new scope in which the closure `play_note` borrows conn_out, so it can be called easily
-        let mut play_note = |note: u8, duration: u64| {
-            const NOTE_ON_MSG: u8 = 0x90;
-            const NOTE_OFF_MSG: u8 = 0x80;
-            const VELOCITY: u8 = 0x64;
-            // We're ignoring errors in here
-            let _ = conn_out.send(&[NOTE_ON_MSG, note, VELOCITY]);
-            sleep(Duration::from_millis(duration * 150));
-            let _ = conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY]);
-        };
 
-        sleep(Duration::from_millis(4 * 150));
-
-        play_note(66, 4);
-        play_note(65, 3);
-        play_note(63, 1);
-        play_note(61, 6);
-        play_note(59, 2);
-        play_note(58, 4);
-        play_note(56, 4);
-        play_note(54, 4);
-    }
+    let midi_notes: Vec<(u8, u64)> = selected
+	.iter()
+	.map( |&(note, _)| (note as u8, 4))
+	.collect();
+    play_notes(&mut conn_out, &midi_notes)?;
 
     sleep(Duration::from_millis(150));
     println!("\nClosing connection");
@@ -432,5 +430,4 @@ fn main() -> GenericResult<()> {
     println!("Connection closed");
 
     Ok(())
-
 }
