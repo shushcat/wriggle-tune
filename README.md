@@ -14,7 +14,7 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 
 ## Roadmap & log
 
-- [ ] Given a sequence of notes (such as `A4E5D4C3F4`), generate a sequence of the same length that satisfies the harmonic fitness requirement.
+- [x] Given a sequence of notes (such as `A4E5D4C3F4`), generate a sequence of the same length that satisfies the harmonic fitness requirement.
 	- [x] Pick representation for this stage: vector of `(u8, u16)`s?
 	- [x] Design fitness function
 		- [x] Formalize harmonic part
@@ -58,9 +58,11 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- [x] Test & revise `evolve()`
 		- [x] Make sure population fitness increases over time.
 		- [x] Use parameters stored in `Population` rather than passing
-- [ ] Rename `target_seq` to `src_seq`
-- [ ] Get parameters with `clap`
-	-
+- [x] Rename `target_seq` to `src_seq`
+- [x] Get parameters with `clap`
+	- For now, just get `target_notes`, `target_steps`, and `src_seq`
+- [ ] Output the midi sequence
+	- [x] Pick the midi crate; use `midir`: https://crates.io/crates/midir
 - [ ] Input target sequence with midi
 
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
@@ -77,8 +79,11 @@ Wishlist:
 - [ ] Formalize the contrapuntal part of the fitness function
 - [ ] Convert `Note` to a struct
 - [ ] Implement `Display` trait for `NoteVec`; see `game_of_life` class notes
-- [ ] Replace StdRng with `rand_chacha` for portability
+- [ ] Replace `StdRng` with `rand_chacha` for portability
 - [ ] Cache `NoteVec` fitnesses
+- [ ] Add a `movement` parameter to affect octave-jumps
+- [ ] Add flags for command line invocation
+- [ ] Allow for setting different numbers of notes by anchoring to currently playing notes
 
 ## Resources
 
@@ -86,9 +91,10 @@ Wishlist:
 - Evolving solutions to the 8-queens problem: file:~/Sync/cs541-artificial_intelligence/assignments/programming2/README.md
 - Bending midi signals to just intonation: file:~/Sync/cs510-music_sound_computation/intemperate_bend-course_project/README.md
 - Useful crates
-	- https://crates.io/crates/jack, real-time audio and midi with Jack
-	- https://crates.io/crates/midir, real-time midi-processing library
-	- https://crates.io/crates/midly, fast processing of midi files and signals
+	- https://crates.io/crates/jack real-time audio and midi with Jack
+	- https://crates.io/crates/midir real-time midi-processing library
+		- Used and updated a lot; used in Bart's `synthkit`
+	- https://crates.io/crates/midly fast processing of midi files and signals
 - Wiki pages:
 	- Scientific pitch notation: https://en.wikipedia.org/wiki/Scientific_pitch_notation
 	- https://en.wikipedia.org/wiki/MIDI

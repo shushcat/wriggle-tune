@@ -11,15 +11,18 @@ use clap::Parser;
 #[command(author, version, about = "Wriggle me up some midi", long_about = None)]
 struct Args {
 
-    /// The number of notes in maximally-fit target sequences.
-    #[arg()]
-    target_notes: i8,
+    // The number of notes in maximally-fit target sequences.
+    // Currently disabled.
+    // #[arg()]
+    // target_notes: i8,
 
     /// The number of steps in maximally-fit target sequences.
     #[arg()]
     target_steps: i8,
 
-    /// Space-delimited midi note numbers.
+    /// Space-delimited midi note numbers.  This needs to go at the
+    /// end of the argument list since the number of arguments is
+    /// flexible.
     #[arg(value_delimiter = ' ', num_args = 1..)]
     src_notes: Vec<i8>,
 
@@ -40,7 +43,7 @@ trait Chromosome {
     where
         Self: Sized;
     fn display(&self);
-    fn fitness(&self, target_seq: &NoteVec, target_notes: &i8, target_steps: &i8) -> f32;
+    fn fitness(&self, src_seq: &NoteVec, target_notes: &i8, target_steps: &i8) -> f32;
     fn mutate(&mut self) -> bool;
     fn randomize(&mut self, length: usize);
 }
@@ -86,7 +89,7 @@ impl Chromosome for NoteVec {
     /// values around the edges, to avoid infinities near zero and out
     /// of an abundance of caution on the other end, also seemed
     /// prudent.
-    fn fitness(&self, target_seq: &NoteVec, notes_param: &i8, steps_param: &i8) -> f32 {
+    fn fitness(&self, src_seq: &NoteVec, notes_param: &i8, steps_param: &i8) -> f32 {
         let mut notes: isize = 0;
         let mut steps: isize = 0;
 
@@ -96,7 +99,7 @@ impl Chromosome for NoteVec {
         // sequence.
         for i in 0..self.len() {
             notes = notes + 1;
-            steps = steps + (target_seq[i].0 - self[i].0).abs() as isize;
+            steps = steps + (src_seq[i].0 - self[i].0).abs() as isize;
         }
 
         let mut notes_deviation: f32 = (notes as f32 - *notes_param as f32).abs() / 128.0;
@@ -172,7 +175,7 @@ struct Population {
     standard_dev: f32,
     target_notes: i8,
     target_steps: i8,
-    target_seq: NoteVec,
+    src_seq: NoteVec,
 }
 
 impl Population {
@@ -183,7 +186,7 @@ impl Population {
     fn new() -> Self {
         let oldsters = [0; 1_000].map(|_| NoteVec::new());
         let younguns = [0; 1_000].map(|_| NoteVec::new());
-        let target_seq = NoteVec::new();
+        let src_seq = NoteVec::new();
         Population {
             oldsters,
             younguns,
@@ -192,7 +195,7 @@ impl Population {
             standard_dev: 0.0,
             target_notes: 0,
             target_steps: 0,
-            target_seq,
+            src_seq,
         }
     }
 
@@ -202,17 +205,17 @@ impl Population {
     /// to evolve an existing population, call `evolve()`.
     fn generate_spontaneously(
         &mut self,
-        target_seq: NoteVec,
+        src_seq: NoteVec,
         target_notes: &i8,
         target_steps: &i8,
     ) {
         self.target_notes = *target_notes;
         self.target_steps = *target_steps;
-        self.target_seq = target_seq;
+        self.src_seq = src_seq;
         for i in 0..self.oldsters.len() {
             // Take ownership of the target sequence.
             // Populate the `NoteVec` with nice new notes.
-            self.oldsters[i].randomize(self.target_seq.len());
+            self.oldsters[i].randomize(self.src_seq.len());
             // Call `update_stats()` here once it's updated to
             // generate running statistics.
         }
@@ -227,7 +230,7 @@ impl Population {
         for i in 0..self.oldsters.len() {
             self.fitness_sum = self.fitness_sum
                 + self.oldsters[i].fitness(
-                    &self.target_seq,
+                    &self.src_seq,
                     &self.target_notes,
                     &self.target_steps,
                 );
@@ -253,7 +256,7 @@ impl Population {
         while selected == None {
             population_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
             if self.oldsters[population_index].fitness(
-                &self.target_seq,
+                &self.src_seq,
                 &self.target_notes,
                 &self.target_steps,
             ) >= flip
@@ -293,8 +296,8 @@ impl Population {
 
             // Pick the fitter of the two children at each step.  I am
             // told there is precedent for this.
-            if child1.fitness(&self.target_seq, &self.target_notes, &self.target_steps)
-                > child2.fitness(&self.target_seq, &self.target_notes, &self.target_steps)
+            if child1.fitness(&self.src_seq, &self.target_notes, &self.target_steps)
+                > child2.fitness(&self.src_seq, &self.target_notes, &self.target_steps)
             {
                 self.younguns[i] = child1;
             } else {
@@ -310,10 +313,7 @@ impl Population {
         // another line.  `take()` would work if I'd implemented
         // the `Default` trait.
         self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
-        // TODO update all the population stats here.
         self.update_stats();
-        print!("oldsters:");
-        self.oldsters.first().unwrap().display();
 
         Ok(true)
     }
@@ -331,7 +331,7 @@ impl Population {
             .iter()
             .map(|n_vec| {
                 let fitness =
-                    n_vec.fitness(&self.target_seq, &self.target_notes, &self.target_steps);
+                    n_vec.fitness(&self.src_seq, &self.target_notes, &self.target_steps);
                 let diff = self.mean - fitness;
                 diff * diff
             })
@@ -343,6 +343,7 @@ impl Population {
 
 fn main() -> GenericResult<()> {
     let args = Args::parse();
+    let target_notes_dummy = 3;
 
     if args.src_notes.iter().any(|&src_note| src_note < 0) {
 	return Err("Midi notes must be at least 0.".into());
@@ -351,11 +352,13 @@ fn main() -> GenericResult<()> {
     let src_seq: NoteVec = args.src_notes.into_iter().map(|note| (note, 0)).collect();
 
     let mut pop = Population::new();
-    pop.generate_spontaneously(src_seq, &args.target_notes, &args.target_steps);
+    pop.generate_spontaneously(src_seq, &target_notes_dummy, &args.target_steps);
 
     for _ in 0..5 {
         pop.evolve()?;
     }
+
+    pop.weighted_selection().unwrap().display();
 
     Ok(())
 
