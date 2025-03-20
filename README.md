@@ -61,17 +61,13 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 - [x] Rename `target_seq` to `src_seq`
 - [x] Get parameters with `clap`
 	- For now, just get `target_notes`, `target_steps`, and `src_seq`
-- [ ] Output the midi sequence
+- [x] Output the midi sequence
 	- [x] Pick the midi crate; use `midir`: https://crates.io/crates/midir
-	- [ ] Play sequence to `timidity` or `fluidsynth`?  To Renoise?
-- [ ] Input target sequence with midi
-
-- [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
-- [ ] Output the generated sequence as midi.
-- [ ] Read an input sequence from midi.
-- [ ] Detect a repeated phrase (allowing for some degree of imprecision) from midi input and treat that as a target sequence.
-- [ ] Tidy up
+	- [x] Play sequence to `timidity` or `fluidsynth`?  To Renoise?
+- [x] Output the generated sequence as midi.
+- [x] Tidy up
 	- [x] Disallow dead code
+	- [ ] Cargo check, format, and so on
 
 -----
 
@@ -85,6 +81,11 @@ Wishlist:
 - [ ] Add a `movement` parameter to affect octave-jumps
 - [ ] Add flags for command line invocation
 - [ ] Allow for setting different numbers of notes by anchoring to currently playing notes
+- [ ] Handle keypresses without blocking, maybe using `crossterm`
+- [ ] Setup basic terminal interface.
+- [ ] Input target sequence with midi
+- [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
+- [ ] Detect a repeated phrase (allowing for some degree of imprecision) from midi input and treat that as a target sequence.
 
 ## Resources
 
@@ -95,6 +96,7 @@ Wishlist:
 	- https://crates.io/crates/jack real-time audio and midi with Jack
 	- https://crates.io/crates/midir real-time midi-processing library
 		- Used and updated a lot; used in Bart's `synthkit`
+		- See https://www.ntietz.com/blog/parsing-midi-rust/.
 	- https://crates.io/crates/midly fast processing of midi files and signals
 - Wiki pages:
 	- Scientific pitch notation: https://en.wikipedia.org/wiki/Scientific_pitch_notation
@@ -104,7 +106,9 @@ Wishlist:
 - Dominique Vandenneucker's MIDI tutorial: https://www.cs.cmu.edu/~music/cmsip/readings/MIDI%20tutorial%20for%20programmers.html
 - Joe Monzo; "A gentle introduction to the MIDI tuning specification"; 2001; http://tonalsoft.com/monzo/miditune/miditune.aspx.  Examples of MIDI pitch bend calculations.
 
-## Sequence representation
+## Working notes
+
+### Sequence representation
 
 ~~Suppose I were to represent each point in time with a `u32`, and that I sampled at a rate of 44.1kHz.~~
 ~~Then I would have 44,100 `u32`s a second with 4 bytes per `u32` and 1 kibibyte per 1024 bytes.~~
@@ -128,7 +132,7 @@ That being the case, I am going to represent note midi frequencies with ~~`(u8, 
 Actually, I should be using `(i8, i16)` tuples since that way I need to handle any changes in sign as they occur when dealing with the note.
 It's still somewhat unclear what will need to happen when dealing with microtonal adjustments; it might be a good idea to split the `i16` into `i8`s, but there will be some bit-level mussing around in either case.
 
-## Fitness function
+### Fitness function
 
 I'd like evolved patterns to vary harmonically and rhythmically.
 

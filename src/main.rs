@@ -5,12 +5,15 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use clap::Parser;
 
-// use std::error::Error;
 use std::io::{stdin, stdout, Write};
 use std::thread::sleep;
 use std::time::Duration;
 
 use midir::{MidiOutput, MidiOutputPort};
+
+// TODO
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 // See the Clap docs at https://docs.rs/clap/latest/clap/.  Some of
 // this is cargo-culty, if'n youknowutimean.
@@ -377,17 +380,17 @@ fn main() -> GenericResult<()> {
         0 => return Err("no output port found".into()),
         1 => {
             println!(
-                "Choosing the only available output port: {}",
+                "Choosing the only output port: {}",
                 midi_out.port_name(&out_ports[0]).unwrap()
             );
             &out_ports[0]
         }
         _ => {
-            println!("\nAvailable output ports:");
+            println!("\nOutput ports:");
             for (i, p) in out_ports.iter().enumerate() {
                 println!("{}: {}", i, midi_out.port_name(p).unwrap());
             }
-            print!("Please select output port: ");
+            print!("Select output port: ");
             stdout().flush()?;
             let mut input = String::new();
             stdin().read_line(&mut input)?;
@@ -399,7 +402,7 @@ fn main() -> GenericResult<()> {
 
 
     if args.src_notes.iter().any(|&src_note| src_note < 0) {
-	return Err("Midi notes must be at least 0.".into());
+	return Err("Midi notes cannot be less than 0.".into());
     }
 
     let src_seq: NoteVec = args.src_notes.into_iter().map(|note| (note, 0)).collect();
@@ -427,11 +430,28 @@ fn main() -> GenericResult<()> {
 	.iter()
 	.map( |&(note, _)| (note as u8, 4))
 	.collect();
-    play_notes(&mut conn_out, &midi_notes)?;
 
-    sleep(Duration::from_millis(150));
+    let running = Arc::new(AtomicBool::new(true));
+    let r = running.clone();
+
+    ctrlc::set_handler(move || {
+	r.store(false, Ordering::SeqCst);
+    })?;
+
+    while running.load(Ordering::SeqCst) {
+        play_notes(&mut conn_out, &midi_notes)?;
+    }
+
+    const NOTE_OFF_MSG: u8 = 0x80;
+    const VELOCITY: u8 = 0x00;
+    for note in 0..128 {
+	conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY])?;
+    }
+
+    // sleep(Duration::from_millis(150));
     println!("\nClosing connection");
-    // This is optional, the connection would automatically be closed as soon as it goes out of scope
+    // This is optional; the connection automatically closes when it
+    // goes out of scope.
     conn_out.close();
     println!("Connection closed");
 
