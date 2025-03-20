@@ -20,7 +20,7 @@ trait Chromosome {
     where
         Self: Sized;
     fn display(&self);
-    fn fitness(&self, target_seq: &NoteVec, p_notes: &i8, p_steps: &i8) -> f32;
+    fn fitness(&self, target_seq: &NoteVec, target_notes: &i8, target_steps: &i8) -> f32;
     fn mutate(&mut self) -> bool;
     fn randomize(&mut self, length: usize);
 }
@@ -149,6 +149,8 @@ struct Population {
     oldsters: [NoteVec; 1_000],
     younguns: [NoteVec; 1_000], // Only used while `evolve()`-ing.
     fitness_sum: f32,           // Normalized in `fitness()`.
+    mean: f32,
+    standard_dev: f32,
     target_notes: i8,
     target_steps: i8,
     target_seq: NoteVec,
@@ -168,6 +170,8 @@ impl Population {
             oldsters,
             younguns,
             fitness_sum: 0.0,
+            mean: 0.0,
+            standard_dev: 0.0,
             target_notes: 0,
             target_steps: 0,
             target_seq,
@@ -191,25 +195,27 @@ impl Population {
             // Take ownership of the target sequence.
             // Populate the `NoteVec` with nice new notes.
             self.oldsters[i].randomize(self.target_seq.len());
-	    // Call `update_stats()` here once it's updated to
-	    // generate running statistics.
+            // Call `update_stats()` here once it's updated to
+            // generate running statistics.
         }
-	self.update_stats();
+        self.update_stats();
     }
 
     /// This function updates the statistics carried by a `Population`
     /// struct.  For the sake of efficiency, it should be updated to
     /// generate running statistics.
     fn update_stats(&mut self) {
-	self.fitness_sum = 0.0;
-	for i in 0..self.oldsters.len() {
-	    self.fitness_sum = self.fitness_sum
-		+ self.oldsters[i].fitness(
-		    &self.target_seq,
-		    &self.target_notes,
-		    &self.target_steps,
-		);
-	}
+        self.fitness_sum = 0.0;
+        for i in 0..self.oldsters.len() {
+            self.fitness_sum = self.fitness_sum
+                + self.oldsters[i].fitness(
+                    &self.target_seq,
+                    &self.target_notes,
+                    &self.target_steps,
+                );
+        }
+        self.set_mean();
+        self.set_standard_dev();
     }
 
     /// This function chooses a population member, weighted according
@@ -219,12 +225,12 @@ impl Population {
     fn weighted_selection(&self) -> Option<&NoteVec> {
         let mut seed_rng = StdRng::from_os_rng();
         let mut selected: Option<&NoteVec> = None;
-        let flip_modulus: f32 = self.mean() + (3.0 * self.standard_deviation());
+        let flip_modulus: f32 = self.mean + (3.0 * self.standard_dev);
         let flip: f32 = if flip_modulus < 0.1 {
-	    0.1
-	} else {
-	    (seed_rng.random::<f32>()) % flip_modulus
-	};
+            0.1
+        } else {
+            (seed_rng.random::<f32>()) % flip_modulus
+        };
         let mut population_index: usize;
         while selected == None {
             population_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
@@ -252,8 +258,6 @@ impl Population {
     // Create a new population, then become that population, just like
     // in real life.
     fn evolve(&mut self) -> GenericResult<bool> {
-        let p_notes: i8 = 4; // TODO parameterize
-        let p_steps: i8 = 3; // TODO parameterize
         let mut child1: NoteVec;
         let mut child2: NoteVec;
         let youngeruns = [0; 1_000].map(|_| NoteVec::new());
@@ -270,8 +274,8 @@ impl Population {
 
             // Pick the fitter of the two children at each step.  I am
             // told there is precedent for this.
-            if child1.fitness(&self.target_seq, &p_notes, &p_steps)
-                > child2.fitness(&self.target_seq, &p_notes, &p_steps)
+            if child1.fitness(&self.target_seq, &self.target_notes, &self.target_steps)
+                > child2.fitness(&self.target_seq, &self.target_notes, &self.target_steps)
             {
                 self.younguns[i] = child1;
             } else {
@@ -287,23 +291,23 @@ impl Population {
         // another line.  `take()` would work if I'd implemented
         // the `Default` trait.
         self.oldsters = std::mem::replace(&mut self.younguns, youngeruns);
-	// TODO update all the population stats here.
-	self.update_stats();
-	print!("oldsters:");
-	self.oldsters.first().unwrap().display();
+        // TODO update all the population stats here.
+        self.update_stats();
+        print!("oldsters:");
+        self.oldsters.first().unwrap().display();
 
         Ok(true)
     }
 
-    fn mean(&self) -> f32 {
-        self.fitness_sum / self.oldsters.len() as f32
+    fn set_mean(&mut self) {
+        self.mean = self.fitness_sum / self.oldsters.len() as f32;
     }
 
     // Very adapted from
     // https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html,
     // with some help from an LLM for the closure syntax.
-    fn standard_deviation(&self) -> f32 {
-        let mean = self.mean();
+    fn set_standard_dev(&mut self) {
+        let mean = self.mean;
         let variance = self
             .oldsters
             .iter()
@@ -316,7 +320,7 @@ impl Population {
             })
             .sum::<f32>()
             / self.oldsters.len() as f32;
-        variance.sqrt()
+        self.standard_dev = variance.sqrt();
     }
 }
 

@@ -81,11 +81,11 @@ fn population_standard_deviation() {
     let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
     let mut pop = Population::new();
     pop.generate_spontaneously(target_seq, &3, &5);
-    println!("{}", pop.standard_deviation());
-    let stdev = pop.standard_deviation();
-    assert_eq!(stdev, pop.standard_deviation());
-    assert!(0.6 > pop.standard_deviation());
-    assert!(0.01 < pop.standard_deviation());
+    println!("{}", pop.standard_dev);
+    let stdev = pop.standard_dev;
+    assert_eq!(stdev, pop.standard_dev);
+    assert!(0.6 > pop.standard_dev);
+    assert!(0.01 < pop.standard_dev);
 }
 
 #[test]

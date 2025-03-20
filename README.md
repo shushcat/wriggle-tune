@@ -54,11 +54,13 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 			3. Actually do the lottery selection thing as intended.
 	- [x] Test `standard_deviation()`
 	- [x] Test `weighted_selection()`
-	- [ ] Test & revise `evolve()`
+	- [x] Cache population fitness standard deviation and mean
+	- [x] Test & revise `evolve()`
 		- [x] Make sure population fitness increases over time.
-		- [ ] Use parameters stored in `Population` rather than passing
-
+		- [x] Use parameters stored in `Population` rather than passing
 - [ ] Get parameters with `clap`
+- [ ] Input target sequence with midi
+
 - [ ] Given a sequence of notes with durations, generate a sequence of the same duration that satisfies both the harmonic and contrapuntal fitness requirements.
 - [ ] Output the generated sequence as midi.
 - [ ] Read an input sequence from midi.
@@ -75,8 +77,6 @@ Wishlist:
 - [ ] Implement `Display` trait for `NoteVec`; see `game_of_life` class notes
 
 Obvious speedups:
-
-- Cache population fitness standard deviation and mean
 
 ## Resources
 
