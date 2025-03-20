@@ -58,6 +58,7 @@ This is a small, work-in-progress program to evolve (questionably) musical accom
 	- [x] Test & revise `evolve()`
 		- [x] Make sure population fitness increases over time.
 		- [x] Use parameters stored in `Population` rather than passing
+- [ ] Rename `target_seq` to `src_seq`
 - [ ] Get parameters with `clap`
 	-
 - [ ] Input target sequence with midi

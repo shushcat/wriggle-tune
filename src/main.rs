@@ -3,6 +3,28 @@ mod tests;
 
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
+use clap::Parser;
+
+// See the Clap docs at https://docs.rs/clap/latest/clap/.  Some of
+// this is cargo-culty, if'n youknowutimean.
+#[derive(Debug, Parser)]
+#[command(author, version, about = "Wriggle me up some midi", long_about = None)]
+struct Args {
+
+    /// Space-delimited midi note numbers.
+    #[arg(value_delimiter = ' ', num_args = 1..)]
+    src_notes: Vec<i8>,
+
+    /// The number of notes in maximally-fit target sequences.
+    #[arg()]
+    target_notes: i8,
+
+    /// The number of steps in maximally-fit target sequences.
+    #[arg()]
+    target_steps: i8,
+}
+
+
 // Courtesy of _Programming Rust_ by Blandy, Orendorff, and Tindall.
 type GenericError = Box<dyn std::error::Error + Send + Sync + 'static>;
 type GenericResult<T> = std::result::Result<T, GenericError>;
@@ -246,7 +268,8 @@ impl Population {
     /// be a parameter.  The `fitness_sum` value should only be
     /// changed when preparing a new population with
     /// `generate_spontaneously()` and during calls to `evolve()`.
-    fn fitness(&self) -> f32 {
+    /// This function is only used during testing.
+    fn _fitness(&self) -> f32 {
         self.fitness_sum / self.oldsters.len() as f32
     }
 
@@ -318,15 +341,21 @@ impl Population {
 }
 
 fn main() -> GenericResult<()> {
-    let test_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
-    test_seq.display();
-    let mut pop = Population::new();
-    let target_notes = 3;
-    let target_steps = 3;
-    pop.generate_spontaneously(test_seq, &target_notes, &target_steps);
-    for _ in 0..10 {
-	pop.evolve()?;
-	println!("fitness: {}", pop.fitness());
+    let args = Args::parse();
+
+    if args.src_notes.iter().any(|&src_note| src_note < 0) {
+	return Err("Midi notes must be at least 0.".into());
     }
+
+    let src_seq: NoteVec = args.src_notes.into_iter().map(|note| (note, 0)).collect();
+
+    let mut pop = Population::new();
+    pop.generate_spontaneously(src_seq, &args.target_notes, &args.target_steps);
+
+    for _ in 0..5 {
+        pop.evolve()?;
+    }
+
     Ok(())
+
 }

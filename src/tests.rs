@@ -71,7 +71,7 @@ fn population_fitness() {
     let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
     let mut pop = Population::new();
     pop.generate_spontaneously(target_seq, &3, &5);
-    let fit = pop.fitness();
+    let fit = pop._fitness();
     assert!(0.0 <= fit);
     assert!(1.0 >= fit);
 }
@@ -101,11 +101,11 @@ fn population_evolve() {
     let target_seq: NoteVec = vec![(49, 0), (53, 0), (56, 0)];
     let mut pop = Population::new();
     pop.generate_spontaneously(target_seq, &3, &5);
-    let fit1 = pop.fitness();
+    let fit1 = pop._fitness();
     let _ = pop.evolve();
-    let fit2 = pop.fitness();
+    let fit2 = pop._fitness();
     assert!(fit1 < fit2);
     _ = pop.evolve();
-    let fit1 = pop.fitness();
+    let fit1 = pop._fitness();
     assert!(fit1 > fit2);
 }
