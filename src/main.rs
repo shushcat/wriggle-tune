@@ -414,7 +414,13 @@ fn main() -> GenericResult<()> {
     let selected = pop.weighted_selection().ok_or("Lottery malfunction.")?;
 
     println!("\nOpening connection");
-    let mut conn_out = midi_out.connect(out_port, "midir-test")?;
+
+    // let mut conn_out = midi_out.connect(out_port, "midir-test")?;
+    let mut conn_out = match midi_out.connect(out_port, "midir-test") {
+	Ok(conn) => conn,
+	Err(e) => return Err(format!("Can't connect to midi out: {}", e).into()),
+    };
+
     println!("Connection open. Listen!");
 
     let midi_notes: Vec<(u8, u64)> = selected
