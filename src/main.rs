@@ -11,10 +11,6 @@ use clap::Parser;
 #[command(author, version, about = "Wriggle me up some midi", long_about = None)]
 struct Args {
 
-    /// Space-delimited midi note numbers.
-    #[arg(value_delimiter = ' ', num_args = 1..)]
-    src_notes: Vec<i8>,
-
     /// The number of notes in maximally-fit target sequences.
     #[arg()]
     target_notes: i8,
@@ -22,6 +18,11 @@ struct Args {
     /// The number of steps in maximally-fit target sequences.
     #[arg()]
     target_steps: i8,
+
+    /// Space-delimited midi note numbers.
+    #[arg(value_delimiter = ' ', num_args = 1..)]
+    src_notes: Vec<i8>,
+
 }
 
 
