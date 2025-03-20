@@ -20,12 +20,10 @@ use std::sync::Arc;
 #[derive(Debug, Parser)]
 #[command(author, version, about = "Wriggle me up some midi", long_about = None)]
 struct Args {
-
     // The number of notes in maximally-fit target sequences.
     // Currently disabled.
     // #[arg()]
     // target_notes: i8,
-
     /// The number of steps in maximally-fit target sequences.
     #[arg()]
     target_steps: i8,
@@ -35,9 +33,7 @@ struct Args {
     /// flexible.
     #[arg(value_delimiter = ' ', num_args = 1..)]
     src_notes: Vec<i8>,
-
 }
-
 
 // Courtesy of _Programming Rust_ by Blandy, Orendorff, and Tindall.
 type GenericError = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -83,8 +79,8 @@ impl Chromosome for NoteVec {
     /// implementing `Display` for `NoteVec`, but since `NoteVec` is
     /// an aliased type, the orphan rule won't allow it.
     fn display(&self) {
-        for i in 0..(self.len() - 1) {
-            print!("({}, {}), ", self[i].0, self[i].1);
+        for note in self.iter().take(self.len() - 1) {
+            print!("({}, {}), ", note.0, note.1);
         }
         println!("({}, {})", self.last().unwrap().0, self.last().unwrap().1);
     }
@@ -108,24 +104,29 @@ impl Chromosome for NoteVec {
         // offset from the note at the same index in the target
         // sequence.
         for i in 0..self.len() {
-            notes = notes + 1;
-            steps = steps + (src_seq[i].0 - self[i].0).abs() as isize;
+            notes += 1;
+            steps += (src_seq[i].0 - self[i].0).abs() as isize;
         }
 
         let mut notes_deviation: f32 = (notes as f32 - *notes_param as f32).abs() / 128.0;
         let mut steps_deviation: f32 = (steps as f32 - *steps_param as f32).abs() / 128.0;
 
         // Clamp note and step deviations.
-        if notes_deviation < 0.0079 {
-            notes_deviation = 0.0079;
-        } else if notes_deviation > 1.0 {
-            notes_deviation = 1.0;
-        }
-        if steps_deviation < 0.0079 {
-            steps_deviation = 0.0079;
-        } else if steps_deviation > 1.0 {
-            steps_deviation = 1.0;
-        }
+        // if notes_deviation < 0.0079 {
+            // notes_deviation = 0.0079;
+        // } else if notes_deviation > 1.0 {
+            // notes_deviation = 1.0;
+        // }
+
+	notes_deviation = notes_deviation.clamp(0.0079, 1.0);
+
+        // if steps_deviation < 0.0079 {
+            // steps_deviation = 0.0079;
+        // } else if steps_deviation > 1.0 {
+            // steps_deviation = 1.0;
+        // }
+
+	steps_deviation = steps_deviation.clamp(0.0079, 1.0);
 
         // The `0.1429` in the following expressions is just an
         // approximation of 1/7th, which makes the curve described by
@@ -140,9 +141,9 @@ impl Chromosome for NoteVec {
 
         // Clamp the result.
         if result > 0.99 {
-            return 1.0;
+            1.0
         } else {
-            return result;
+            result
         }
     }
 
@@ -213,12 +214,7 @@ impl Population {
     /// each `NoteVec` determined by the target sequence.  This
     /// function should only be called to jumpstart the whole process;
     /// to evolve an existing population, call `evolve()`.
-    fn generate_spontaneously(
-        &mut self,
-        src_seq: NoteVec,
-        target_notes: &i8,
-        target_steps: &i8,
-    ) {
+    fn generate_spontaneously(&mut self, src_seq: NoteVec, target_notes: &i8, target_steps: &i8) {
         self.target_notes = *target_notes;
         self.target_steps = *target_steps;
         self.src_seq = src_seq;
@@ -238,12 +234,7 @@ impl Population {
     fn update_stats(&mut self) {
         self.fitness_sum = 0.0;
         for i in 0..self.oldsters.len() {
-            self.fitness_sum = self.fitness_sum
-                + self.oldsters[i].fitness(
-                    &self.src_seq,
-                    &self.target_notes,
-                    &self.target_steps,
-                );
+            self.fitness_sum += self.oldsters[i].fitness(&self.src_seq, &self.target_notes, &self.target_steps);
         }
         self.set_mean();
         self.set_standard_dev();
@@ -263,9 +254,10 @@ impl Population {
             (seed_rng.random::<f32>()) % flip_modulus
         };
         let mut population_index: usize;
-	let mut tries = 0;
-        while selected == None && tries < 10_000{
-            population_index = ((seed_rng.random::<i32>()) % 1000).abs() as usize;
+        let mut tries = 0;
+        // while selected == None && tries < 10_000 {
+        while selected.is_none() && tries < 10_000 {
+            population_index = ((seed_rng.random::<i32>()) % 1000).unsigned_abs() as usize;
             if self.oldsters[population_index].fitness(
                 &self.src_seq,
                 &self.target_notes,
@@ -274,7 +266,7 @@ impl Population {
             {
                 selected = Some(&self.oldsters[population_index]);
             }
-	    tries = tries + 1;
+            tries += 1;
         }
 
         selected
@@ -342,8 +334,7 @@ impl Population {
             .oldsters
             .iter()
             .map(|n_vec| {
-                let fitness =
-                    n_vec.fitness(&self.src_seq, &self.target_notes, &self.target_steps);
+                let fitness = n_vec.fitness(&self.src_seq, &self.target_notes, &self.target_steps);
                 let diff = self.mean - fitness;
                 diff * diff
             })
@@ -353,15 +344,18 @@ impl Population {
     }
 }
 
-fn play_notes(conn_out: &mut midir::MidiOutputConnection, notes: &[(u8, u64)]) -> GenericResult<()> {
+fn play_notes(
+    conn_out: &mut midir::MidiOutputConnection,
+    notes: &[(u8, u64)],
+) -> GenericResult<()> {
     const NOTE_ON_MSG: u8 = 0x90;
     const NOTE_OFF_MSG: u8 = 0x80;
     const VELOCITY: u8 = 0x64;
     sleep(Duration::from_millis(4 * 150));
     for &(note, duration) in notes {
-	let _ = conn_out.send(&[NOTE_ON_MSG, note, VELOCITY]);
-	sleep(Duration::from_millis(duration * 150));
-	let _ = conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY]);
+        let _ = conn_out.send(&[NOTE_ON_MSG, note, VELOCITY]);
+        sleep(Duration::from_millis(duration * 150));
+        let _ = conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY]);
     }
     Ok(())
 }
@@ -400,9 +394,8 @@ fn main() -> GenericResult<()> {
         }
     };
 
-
     if args.src_notes.iter().any(|&src_note| src_note < 0) {
-	return Err("Midi notes cannot be less than 0.".into());
+        return Err("Midi notes cannot be less than 0.".into());
     }
 
     let src_seq: NoteVec = args.src_notes.into_iter().map(|note| (note, 0)).collect();
@@ -420,22 +413,19 @@ fn main() -> GenericResult<()> {
     println!("\nOpening connection");
 
     let mut conn_out = match midi_out.connect(out_port, "wriggle-tune") {
-	Ok(conn) => conn,
-	Err(er) => return Err(format!("Can't connect to midi out: {}", er).into()),
+        Ok(conn) => conn,
+        Err(er) => return Err(format!("Can't connect to midi out: {}", er).into()),
     };
 
     println!("Connection open. Listen!");
 
-    let midi_notes: Vec<(u8, u64)> = selected
-	.iter()
-	.map( |&(note, _)| (note as u8, 4))
-	.collect();
+    let midi_notes: Vec<(u8, u64)> = selected.iter().map(|&(note, _)| (note as u8, 4)).collect();
 
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();
 
     ctrlc::set_handler(move || {
-	r.store(false, Ordering::SeqCst);
+        r.store(false, Ordering::SeqCst);
     })?;
 
     while running.load(Ordering::SeqCst) {
@@ -445,7 +435,7 @@ fn main() -> GenericResult<()> {
     const NOTE_OFF_MSG: u8 = 0x80;
     const VELOCITY: u8 = 0x00;
     for note in 0..128 {
-	conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY])?;
+        conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY])?;
     }
 
     // sleep(Duration::from_millis(150));
