@@ -19,6 +19,13 @@ Which prompts me to mention one of the overarching problems I had while developi
 
 Eventually---soon!---I would like to be able to run this program on an embedded device that is controlled directly via a midi instrument and perhaps a knob or two.
 
+## Building
+
+
+- On **MacOS**, a simple `cargo build` should do the trick.
+- On **Linux**, run `cargo build --features jack_audio`.
+- On **Windows**, the build process is as-yet untested.
+
 ## The algorithm, broadly
 
 1. Randomly generate an initial population of sequences, each having the same duration as the target sequence;
