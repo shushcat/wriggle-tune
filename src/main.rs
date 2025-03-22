@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use midir::{MidiOutput, MidiOutputPort};
 
-// TODO
+// TODO Review these.
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -111,22 +111,9 @@ impl Chromosome for NoteVec {
         let mut notes_deviation: f32 = (notes as f32 - *notes_param as f32).abs() / 128.0;
         let mut steps_deviation: f32 = (steps as f32 - *steps_param as f32).abs() / 128.0;
 
-        // Clamp note and step deviations.
-        // if notes_deviation < 0.0079 {
-            // notes_deviation = 0.0079;
-        // } else if notes_deviation > 1.0 {
-            // notes_deviation = 1.0;
-        // }
-
-	notes_deviation = notes_deviation.clamp(0.0079, 1.0);
-
-        // if steps_deviation < 0.0079 {
-            // steps_deviation = 0.0079;
-        // } else if steps_deviation > 1.0 {
-            // steps_deviation = 1.0;
-        // }
-
-	steps_deviation = steps_deviation.clamp(0.0079, 1.0);
+        // Keep note and step deviations in a range that works with the logarithmic function below.
+        notes_deviation = notes_deviation.clamp(0.0079, 1.0);
+        steps_deviation = steps_deviation.clamp(0.0079, 1.0);
 
         // The `0.1429` in the following expressions is just an
         // approximation of 1/7th, which makes the curve described by
@@ -229,12 +216,13 @@ impl Population {
     }
 
     /// This function updates the statistics carried by a `Population`
-    /// struct.  For the sake of efficiency, it should be updated to
-    /// generate running statistics.
+    /// struct.  For the sake of efficiency (?), it should be updated to
+    /// generate running statistics.  Consider this.
     fn update_stats(&mut self) {
         self.fitness_sum = 0.0;
         for i in 0..self.oldsters.len() {
-            self.fitness_sum += self.oldsters[i].fitness(&self.src_seq, &self.target_notes, &self.target_steps);
+            self.fitness_sum +=
+                self.oldsters[i].fitness(&self.src_seq, &self.target_notes, &self.target_steps);
         }
         self.set_mean();
         self.set_standard_dev();
@@ -255,7 +243,6 @@ impl Population {
         };
         let mut population_index: usize;
         let mut tries = 0;
-        // while selected == None && tries < 10_000 {
         while selected.is_none() && tries < 10_000 {
             population_index = ((seed_rng.random::<i32>()) % 1000).unsigned_abs() as usize;
             if self.oldsters[population_index].fitness(
@@ -281,8 +268,8 @@ impl Population {
         self.fitness_sum / self.oldsters.len() as f32
     }
 
-    // Create a new population, then become that population, just like
-    // in real life.
+    /// Create a new population, then become that population, just like
+    /// in real life.
     fn evolve(&mut self) -> GenericResult<bool> {
         let mut child1: NoteVec;
         let mut child2: NoteVec;
@@ -326,9 +313,9 @@ impl Population {
         self.mean = self.fitness_sum / self.oldsters.len() as f32;
     }
 
-    // Very adapted from
-    // https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html,
-    // with some help from an LLM for the syntax in the closure.
+    /// Very adapted from
+    /// https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/statistics.html,
+    /// with some help from an LLM for the syntax in the closure.
     fn set_standard_dev(&mut self) {
         let variance = self
             .oldsters
@@ -417,7 +404,7 @@ fn main() -> GenericResult<()> {
         Err(er) => return Err(format!("Can't connect to midi out: {}", er).into()),
     };
 
-    println!("Connection open. Listen!");
+    println!("Connection open.  Listen!");
 
     let midi_notes: Vec<(u8, u64)> = selected.iter().map(|&(note, _)| (note as u8, 4)).collect();
 
@@ -438,7 +425,6 @@ fn main() -> GenericResult<()> {
         conn_out.send(&[NOTE_OFF_MSG, note, VELOCITY])?;
     }
 
-    // sleep(Duration::from_millis(150));
     println!("\nClosing connection");
     // This is optional; the connection automatically closes when it
     // goes out of scope.
