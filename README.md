@@ -3,21 +3,6 @@
 ![](img/wriggle.png)
 
 This is a small program that uses a genetic algorithm to evolve (questionably---see this [**demo** video](https://media.pdx.edu/media/t/1_4vmm540h)) musical accompaniments to short sequences of notes.
-At present, the user must type in notes at the command line as midi note numbers, after which the program evolves several generations of sequences, then returns a sequence from the final generation.
-
-For instance, if you call the program with `wriggle-tune 9 60 60 60`, that will select for sequences of three notes that differ from note 60 (which is C3 or C4, depending on who you ask) by a total of 9 half-steps.
-Those sequences include `51 60 60`, `63 63 63`, and so on.
-The closer the sum of the pairwise half-step differences between notes at the same index in the source and evolved sequences, the fitter that sequence is, and the fitness of a sequence determines how likely it is to be chosen to help populate the next generation.
-
-As another example, say you want to select for sequences that (again, among others) are three notes long and are a total, when differences are summed pairwise, of 2 major thirds and a half-step relative to the sequence D4, F#4, A4.
-You would then invoke the program with `wriggle-tune 9 74 78 81`.
-You will likely want to consult a chart like the one at <https://computermusicresource.com/midikeys.html> when entering notes.
-
-I realize that is a terrible interface.
-What would be much better, and one of the things I would like to do next, is to enter source sequences using a midi controller.
-Which prompts me to mention one of the overarching problems I had while developing this program: scoping work to get _something_ done while avoiding cutting corners so badly that continued work will be overly difficult.
-
-Eventually---soon!---I would like to be able to run this program on an embedded device that is controlled directly via a midi instrument and perhaps a knob or two.
 
 ## Building
 
@@ -26,7 +11,56 @@ Eventually---soon!---I would like to be able to run this program on an embedded 
 - On **Linux**, run `cargo build --features jack_audio`.
 - On **Windows**, the build process is as-yet untested.
 
-## The algorithm, broadly
+## Running the program
+
+To make some sounds, you need to have a MIDI interface listening on your computer.
+An easy way to do that, which should work on all platforms is as follows.
+
+1. Install [FluidSynth](https://github.com/FluidSynth/fluidsynth)
+	- on **MacOS** using [Homebrew](https://brew.sh/) with the command `brew install fluidsynth`;
+	- on **Linux** using your distribution's package manager, such as with `sudo apt install fluidsynth`, but see [the FluidSynth wiki](https://github.com/FluidSynth/fluidsynth/wiki/Download) for specific commands; and
+	- on **Windows** using [Chocolatey](https://chocolatey.org/) with the command `choco install fluidsynth`.
+2. Obtain a soundfont, which you may want to learn more about by reading [their Wikipedia page](https://en.wikipedia.org/wiki/SoundFont) or looking over [the FluidSynth wiki's page on them](https://github.com/FluidSynth/fluidsynth/wiki/SoundFont), but which you can immediately do by downloading [this small soundfont, `TimGM6mb.sf2`](http://sourceforge.net/p/mscore/code/HEAD/tree/trunk/mscore/share/sound/TimGM6mb.sf2?format=raw) packaged as part of [MuseScore](https://musescore.org/en/download).
+3. Run `fluidsynth TimGM6mb.sf2` from the directory where you've saved `TimGM6mb.sf2`.
+4. In a separate terminal,
+	- compile WriggleTune by following the above directions under **Building**,
+	- invoke WriggleTune as `wriggle-tune <TARGET_STEPS> [SRC_NOTES]...`, and
+	- enter a number to select FluidSynth from the menu that appears.
+
+For example, suppose you have installed FluidSynth obtained the `TimGM6mb.sf2` soundfont, and started FluidSynth with `fluidsynth TimGM6mb.sf2`, and that your current working directory is the root of a freshly-cloned WriggleTune project---that is, your current working directory is the same directory in which this `README.md` is stored.
+The following commands should then produce some sounds:
+
+```sh
+cargo build
+# `cargo build -features jack_audio` if you're on Linux
+./target/debug/wriggle-tune 31 60 64 68 72 73 81
+```
+
+## What's going on?
+
+When you call `wriggle-tune 31 60 64 68 72 73 81`, you are telling WriggleTune two things.
+First, you are telling it that the source sequence is the sequence of notes C4, E4, G#4, C5, C#5, and A6, with each note specified as a midi note number from 0 to 127.
+Second, the first number, `31`, is the `TARGET_STEPS` parameter, and it tells WriggleTune that generated target sequences that are maximally fit differ from the source sequence by 31 [half steps](https://en.wikipedia.org/wiki/Semitone).
+At present target sequences always have the same number of notes as source sequences.
+
+A sequence of notes and a `TARGET_STEPS` steps number are used to determine the fitness of generated target sequences.
+The closer a given target sequence's pairwise sum of absolute-value differences from the source sequence is to `TARGET_STEPS`, the fitter that target sequence is.
+And the fitter a target sequence is, the more likely that sequence is to be selected when generating the next generation of sequences.
+
+As an example, consider what happens if you execute `wriggle-tune 9 60 60 60`: that will select for sequences of three notes that differ from a sequence of three note 60s (where note 60 in midi is C3 or C4, depending on who you ask) by a total of 9 half-steps.
+Those sequences include `51 60 60`, `63 63 63`, `65 60 56`, among others, because |60-51|+|60-60|+|60-60| = 9, |60-63|+|60-63|+|60-63| = 9, and |60-65|+|60-60|+|60-56| = 9.
+
+As another example, say you want to select for sequences that (again, among others) are three notes long and are a total, when differences are summed pairwise, of 2 major thirds and a half-step relative to the sequence D4, F#4, A4.
+You would then invoke the program with `wriggle-tune 9 74 78 81`.
+You will likely want to consult a chart like the one at <https://computermusicresource.com/midikeys.html> when entering notes.
+
+I realize the interface is terrible.
+What would be much better, and one of the things I would like to do next, is to enter source sequences using a midi controller.
+Which prompts me to mention one of the overarching problems I had while developing this program: scoping work to get _something_ done while avoiding cutting corners so badly that continued work will be overly difficult.
+
+Eventually---soon!---I would like to be able to run this program on an embedded device that is controlled directly via a midi instrument and perhaps a knob or two.
+
+### The algorithm, broadly
 
 1. Randomly generate an initial population of sequences, each having the same duration as the target sequence;
 2. Evolve a new population of the same size as the initial population by
@@ -132,6 +166,8 @@ Next:
 - Joe Monzo; "A gentle introduction to the MIDI tuning specification"; 2001; http://tonalsoft.com/monzo/miditune/miditune.aspx.  Examples of MIDI pitch bend calculations.
 
 ## Working notes
+
+You probably don't care about this.
 
 ### Sequence representation
 
