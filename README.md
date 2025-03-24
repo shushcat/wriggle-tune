@@ -2,7 +2,23 @@
 
 ![](img/wriggle.png)
 
-This is a small program that uses a genetic algorithm to evolve (questionably---see this [**demo** video](https://media.pdx.edu/media/t/1_4vmm540h)) musical accompaniments to short sequences of notes.
+This is a small program that uses a genetic algorithm to evolve questionably musical accompaniments to short sequences of notes.
+See this [**demo** video](https://media.pdx.edu/media/t/1_4vmm540h).
+At present, the user must type in notes at the command line as midi note numbers, after which the program evolves several generations of sequences, then returns a sequence from the final generation.
+
+For instance, if you call the program with `wriggle-tune 9 60 60 60`, that will select for sequences of three notes that differ from note 60 (which is C3 or C4, depending on who you ask) by a total of 9 half-steps.
+Those sequences include `51 60 60`, `63 63 63`, and so on.
+The closer the sum of the pairwise half-step differences between notes at the same index in the source and evolved sequences, the fitter that sequence is, and the fitness of a sequence determines how likely it is to be chosen to help populate the next generation.
+
+As another example, say you want to select for sequences that (again, among others) are three notes long and are a total, when differences are summed pairwise, of 2 major thirds and a half-step relative to the sequence D4, F#4, A4.
+You would then invoke the program with `wriggle-tune 9 74 78 81`.
+You will likely want to consult a chart like the one at <https://computermusicresource.com/midikeys.html> when entering notes.
+
+I realize that is a terrible interface.
+What would be much better, and one of the things I would like to do next, is to enter source sequences using a midi controller.
+Which prompts me to mention one of the overarching problems I had while developing this program: scoping work to get _something_ done while avoiding cutting corners so badly that continued work will be overly difficult.
+
+Eventually---soon!---I would like to be able to run this program on an embedded device that is controlled directly via a midi instrument and perhaps a knob or two.
 
 ## Building
 
@@ -148,6 +164,7 @@ Next:
 
 ## Resources
 
+- As a stop-gap, hardcode timings to allow for weird variations of [*Piano phase* by Steve Reich](https://en.wikipedia.org/wiki/Piano_Phase).
 - Look into https://en.wikipedia.org/wiki/Contrapuntal_motion; think about a fitness function for contrapuntal motion.
 - Evolving solutions to the 8-queens problem: file:~/Sync/cs541-artificial_intelligence/assignments/programming2/README.md
 - Bending midi signals to just intonation: file:~/Sync/cs510-music_sound_computation/intemperate_bend-course_project/README.md
